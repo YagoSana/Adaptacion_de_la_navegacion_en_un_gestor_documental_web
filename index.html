@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Análisis de Grafos - PageRank</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Resultados del Experimento</h1>
+        <p>Análisis de jerarquías y PageRank sobre bibliografía</p>
+        
+        <button onclick="cargarResultados()">Calcular / Actualizar Datos</button>
+
+        <table id="tabla-resultados">
+            <thead>
+                <tr>
+                    <th>Nodo (Categoría/Libro)</th>
+                    <th>V1 (Base)</th>
+                    <th>V3 (Refs/Pesos)</th>
+                    <th>V4 (Likes)</th>
+                </tr>
+            </thead>
+            <tbody id="cuerpo-tabla">
+                </tbody>
+        </table>
+    </div>
+
+    <script>
+        async function cargarResultados() {
+            const btn = document.querySelector('button');
+            const tbody = document.getElementById('cuerpo-tabla');
+            
+            btn.innerText = "Calculando...";
+            tbody.innerHTML = "";
+
+            try {
+                const res = await fetch('http://localhost:8080', { method: 'POST' });
+                const datos = await res.json();
+
+                datos.forEach(item => {
+                    const row = `<tr>
+                        <td>${item.nombre}</td>
+                        <td class="num">${item.v1}</td>
+                        <td class="num">${item.v3}</td>
+                        <td class="num">${item.v4}</td>
+                    </tr>`;
+                    tbody.innerHTML += row;
+                });
+                btn.innerText = "Actualizar Datos";
+            } catch (err) {
+                alert("Error: ¿Está el servidor encendido?");
+                btn.innerText = "Reintentar";
+            }
+        }
+    </script>
+</body>
+</html>

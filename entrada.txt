@@ -1,0 +1,27 @@
+Fiction
+    Historical fiction
+        Christian Historical Fiction
+        Historical mystery   **
+        Biographical
+        Alternate history
+        Historical adventure
+    Mystery&Crime fiction
+        Crime
+            Detective crime
+            Noir crime
+            Hard boiled crime
+        Mystery 
+            Detective mystery
+            Cozy mystery
+            Murder mystery
+            Paranormal mystery
+            Historical mystery  **
+        Thriller
+            Mystery thriller
+            Psychological thriller
+            Spy thriller
+            Legal thriller
+            Medical thriller
+            Supernatural thriller
+        Suspense 
+            Love-inspired suspense
