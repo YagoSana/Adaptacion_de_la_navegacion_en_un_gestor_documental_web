@@ -1,6 +1,7 @@
 import socket
 import json
-import demov5  # Importamos tu lógica directamente
+import lector  
+import logica
 
 def iniciar_servidor():
     HOST, PORT = '127.0.0.1', 8080
@@ -28,24 +29,21 @@ def iniciar_servidor():
                 continue
 
             try:
-                # --- EJECUCIÓN DE TU LÓGICA ---
-                # Usamos las funciones que ya tienes en demov5.py
-                G = demov5.leer_entrada("entrada.txt")
+                # Usamos las funciones que ya hay en logica.py
+                G = lector.leer_entrada("entrada.txt")
                 referencias = [("Historical mystery", "Detective mystery"), ("Mystery thriller", "Psychological thriller")]
-                likes = demov5.likes_libros
                 
-                v1 = demov5.version1_sin_pesos(G)
-                v3 = demov5.version3_con_referencias_y_pesos(G, referencias)
-                v4 = demov5.version4_personalizacion_likes(G, likes, referencias)
+                # Likes asociados al dataset, actualmente a mano
+                likes = logica.likes_libros
+                
+                valores = logica.version_personalizacion_likes(G, likes, referencias)
 
                 # Preparamos los datos para enviarlos a la web
                 nodos_data = []
-                for nodo in sorted(v1.keys()):
+                for nodo in sorted(valores.keys()):
                     nodos_data.append({
                         "nombre": nodo,
-                        "v1": round(v1[nodo], 6),
-                        "v3": round(v3[nodo], 6),
-                        "v4": round(v4[nodo], 6)
+                        "valor": round(valores[nodo], 6)
                     })
 
                 cuerpo_json = json.dumps(nodos_data)
@@ -62,7 +60,7 @@ def iniciar_servidor():
                 conn.sendall(respuesta_http.encode('utf-8'))
                 
             except Exception as e:
-                print(f"❌ Error procesando: {e}")
+                print(f"Error durante el proceso: {e}")
                 
         conn.close()
 

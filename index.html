@@ -7,8 +7,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>📊 Resultados del Experimento</h1>
-        <p>Análisis de jerarquías y PageRank sobre bibliografía</p>
+        <h1>Muestra de valores de pagerank</h1>
+        <p>Ajustar valores:</p>
+
+        <!-- Insertar botones para modificar referencias y likes -->
         
         <button onclick="cargarResultados()">Calcular / Actualizar Datos</button>
 
@@ -16,9 +18,7 @@
             <thead>
                 <tr>
                     <th>Nodo (Categoría/Libro)</th>
-                    <th>V1 (Base)</th>
-                    <th>V3 (Refs/Pesos)</th>
-                    <th>V4 (Likes)</th>
+                    <th>Valores</th>
                 </tr>
             </thead>
             <tbody id="cuerpo-tabla">
@@ -41,9 +41,7 @@
                 datos.forEach(item => {
                     const row = `<tr>
                         <td>${item.nombre}</td>
-                        <td class="num">${item.v1}</td>
-                        <td class="num">${item.v3}</td>
-                        <td class="num">${item.v4}</td>
+                        <td class="num">${item.valor}</td>
                     </tr>`;
                     tbody.innerHTML += row;
                 });
