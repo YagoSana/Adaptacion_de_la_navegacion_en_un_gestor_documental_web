@@ -16,8 +16,7 @@ def iniciar_servidor():
         peticion = conn.recv(2048).decode('utf-8')
         
         if peticion:
-            # --- SOPORTE PARA CORS (Preflight) ---
-            # El navegador preguntará primero con OPTIONS si puede hablar contigo
+            # El navegador preguntará primero con OPTIONS si puede comunicar 
             if peticion.startswith('OPTIONS'):
                 respuesta = "HTTP/1.1 204 No Content\r\n" \
                             "Access-Control-Allow-Origin: *\r\n" \
@@ -29,14 +28,29 @@ def iniciar_servidor():
                 continue
 
             try:
-                # Usamos las funciones que ya hay en logica.py
+
+                # EXTRAEMOS LOS VALORES DEL CLIENTE
+                # Buscamos el cuerpo del JSON en la petición
+                partes = peticion.split('\r\n\r\n')
+                if len(partes) > 1:
+                    body_data = json.loads(partes[1])
+                    p_libro = body_data.get('peso_libro', 2.0)
+                    p_ref = body_data.get('peso_referencia', 3.0)
+                else:
+                    # Valores default
+                    p_libro, p_ref = 2.0, 3.0
+
+
+                # Usar funciones que ya hay en logica.py
                 G = lector.leer_entrada("entrada.txt")
+                
+                # Hacer referencias segun dataset
                 referencias = [("Historical mystery", "Detective mystery"), ("Mystery thriller", "Psychological thriller")]
                 
                 # Likes asociados al dataset, actualmente a mano
                 likes = logica.likes_libros
                 
-                valores = logica.version_personalizacion_likes(G, likes, referencias)
+                valores = logica.version_personalizacion_likes(G, likes, referencias, p_libro, p_ref)
 
                 # Preparamos los datos para enviarlos a la web
                 nodos_data = []

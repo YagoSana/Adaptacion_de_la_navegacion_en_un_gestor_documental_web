@@ -11,7 +11,18 @@
         <p>Ajustar valores:</p>
 
         <!-- Insertar botones para modificar referencias y likes -->
-        
+        <div class="controls">
+            <div class="control-group">
+                <label>Peso Valoraciones: <span id="val_libros">3</span></label>
+                <input type="range" id="input_libros" min="1" max="5" step="0.5" value="3" oninput="val_libros.innerText=this.value">
+            </div>
+            
+            <div class="control-group">
+                <label>Peso Referencias: <span id="val_refs">3</span></label>
+                <input type="range" id="input_refs" min="1" max="5" step="0.5" value="3" oninput="val_refs.innerText=this.value">
+            </div>
+        </div>
+
         <button onclick="cargarResultados()">Calcular / Actualizar Datos</button>
 
         <table id="tabla-resultados">
@@ -31,11 +42,23 @@
             const btn = document.querySelector('button');
             const tbody = document.getElementById('cuerpo-tabla');
             
+            // Capturar los valores de los sliders
+            const pesoLibro = document.getElementById('input_libros').value;
+            const pesoRef = document.getElementById('input_refs').value;
+            
             btn.innerText = "Calculando...";
+            btn.disabled = true;
             tbody.innerHTML = "";
 
             try {
-                const res = await fetch('http://localhost:8080', { method: 'POST' });
+                const res = await fetch('http://localhost:8080', { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        peso_libro: parseFloat(pesoLibro),
+                        peso_referencia: parseFloat(pesoRef)
+                    })
+                });
                 const datos = await res.json();
 
                 datos.forEach(item => {
@@ -49,6 +72,8 @@
             } catch (err) {
                 alert("Error: ¿Está el servidor encendido?");
                 btn.innerText = "Reintentar";
+            } finally {
+                btn.disabled = false;
             }
         }
     </script>

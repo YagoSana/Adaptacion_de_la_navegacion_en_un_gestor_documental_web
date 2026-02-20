@@ -2,7 +2,7 @@ import networkx as nx
 from lector import leer_entrada
 from imprimir import imprimir_arbol_con_pesos
 
-def version_personalizacion_likes(G, likes_libros, referencias=None, alpha=0.85):
+def version_personalizacion_likes(G, likes_libros, referencias=None, peso_libros=3, peso_ref=3, alpha=0.85):
     """
     PageRank personalizado donde:
     - Cada libro tiene un número de likes (rating)
@@ -44,7 +44,7 @@ def version_personalizacion_likes(G, likes_libros, referencias=None, alpha=0.85)
     for nodo in G_completo.nodes():
         if nodo in likes_libros:
             # Normalizar: cada libro tiene peso proporcional a sus likes
-            personalization[nodo] = likes_libros[nodo] / total_likes
+            personalization[nodo] = ((likes_libros[nodo] * peso_libros) / total_likes)
         else:
             # Nodos intermedios (categorías) empiezan con 0
             personalization[nodo] = 0.0
@@ -99,7 +99,10 @@ likes_libros = {
     "Love-inspired suspense": 180,
 }
 
-pr_v4 = version_personalizacion_likes(G, likes_libros, referencias)
+peso_libros = 3
+peso_ref = 3
+
+pr_v4 = version_personalizacion_likes(G, likes_libros, referencias, peso_libros, peso_ref)
 
 # MOSTRAR 
 imprimir_arbol_con_pesos(G, pr_v4, "Personalización por Likes")
