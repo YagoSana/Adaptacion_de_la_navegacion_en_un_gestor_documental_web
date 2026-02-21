@@ -88,3 +88,28 @@ tr:hover {
 input[type="range"] {
     cursor: pointer;
 }
+
+.resultados-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr; /* Dos columnas del mismo tamaño */
+    gap: 30px;
+    align-items: start;
+    margin-top: 20px;
+}
+
+.panel {
+    background: #ffffff;
+    padding: 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.panel h2 {
+    font-size: 1.2rem;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 15px;
+    border-bottom: 2px solid #f0f2f5;
+    padding-bottom: 10px;
+}

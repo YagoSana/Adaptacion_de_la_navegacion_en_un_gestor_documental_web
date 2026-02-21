@@ -1,64 +1,79 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
-    <title>Análisis de Grafos - PageRank</title>
+    <title>Resultados PageRank</title>
     <link rel="stylesheet" href="style.css">
 </head>
+
 <body>
     <div class="container">
-        <h1>Muestra de valores de pagerank</h1>
-        <p>Ajustar valores:</p>
+        <h1>Resultados de PageRank</h1>
+        <p>Ajustar parámetros del algoritmo:</p>
 
-        <!-- Insertar botones para modificar referencias y likes -->
         <div class="controls">
             <div class="control-group">
-                <label>Peso Valoraciones: <span id="val_libros">3</span></label>
-                <input type="range" id="input_libros" min="1" max="5" step="0.5" value="3" oninput="val_libros.innerText=this.value">
+                <label>Peso Libros (Hojas): <span id="val_libros">3</span></label>
+                <input type="range" id="input_libros" min="1" max="5" step="0.5" value="3"
+                    oninput="val_libros.innerText=this.value">
             </div>
-            
+
             <div class="control-group">
                 <label>Peso Referencias: <span id="val_refs">3</span></label>
-                <input type="range" id="input_refs" min="1" max="5" step="0.5" value="3" oninput="val_refs.innerText=this.value">
+                <input type="range" id="input_refs" min="1" max="5" step="0.5" value="3"
+                    oninput="val_refs.innerText=this.value">
             </div>
         </div>
 
         <div class="buttons">
-            <button onclick="cargarResultados()">Calcular / Actualizar Datos</button>
-            <button>Mostrar Grafo</button>
+            <button id="btn-main" onclick="cargarResultados()">Calcular Datos</button>
         </div>
-        <table id="tabla-resultados">
-            <thead>
-                <tr>
-                    <th>Nodo (Categoría/Libro)</th>
-                    <th>Valores</th>
-                </tr>
-            </thead>
-            <tbody id="cuerpo-tabla">
-                </tbody>
-        </table>
+
+        <hr>
+
+        <div class="resultados-grid">
+
+            <div class="panel">
+                <h2>Ranking Global</h2>
+                <table id="tabla-resultados">
+                    <thead>
+                        <tr>
+                            <th>Nodo (Categoría/Libro)</th>
+                            <th>Valor PageRank</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cuerpo-tabla">
+                        <tr>
+                            <td colspan="2">
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="panel">
+                <h2>Estructura del Grafo</h2>
+                <div class="tree-wrapper">
+                    <ul id="arbol-raiz" class="tree"></ul>
+                </div>
+            </div>
+
+        </div>
     </div>
 
     <script>
         async function cargarResultados() {
-            const btn = document.querySelector('button');
-            const tbody = document.getElementById('cuerpo-tabla');
-            
-            // Capturar los valores de los sliders
+            const btn = document.getElementById('btn-main');
             const pesoLibro = document.getElementById('input_libros').value;
             const pesoRef = document.getElementById('input_refs').value;
 
-            // LOG DE CONTROL
-            console.log("DEBUG CLIENTE:");
-            console.log("- Valor Slider Libros:", pesoLibro);
-            console.log("- Valor Slider Refs:", pesoRef);
-            
-            btn.innerText = "Calculando...";
             btn.disabled = true;
-            tbody.innerHTML = "";
+            btn.innerText = "Calculando...";
 
             try {
-                const res = await fetch('http://localhost:8080', { 
+                // Petición al servidor de sockets
+                const res = await fetch('http://localhost:8080', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -66,27 +81,59 @@
                         peso_referencia: parseFloat(pesoRef)
                     })
                 });
-                const datos = await res.json();
-                datos.sort((a, b) => b.valor - a.valor); // ordenar
 
-                // Limpiar la tabla antes de imprimir por si hay basura
-                tbody.innerHTML = "";
+                const datosCache = await res.json();
 
-                datos.forEach(item => {
-                    const row = `<tr>
-                        <td>${item.nombre}</td>
-                        <td class="num">${item.valor}</td>
-                    </tr>`;
-                    tbody.innerHTML += row;
-                });
+                // Renderizar ambas vistas a la vez
+                renderizarTabla(datosCache.tabla);
+                renderizarArbol(datosCache.arbol, document.getElementById('arbol-raiz'));
+
                 btn.innerText = "Actualizar Datos";
             } catch (err) {
-                alert("Error: ¿Está el servidor encendido?");
+                console.error(err);
+                alert("Error de conexión. ¿Está server.py encendido?");
                 btn.innerText = "Reintentar";
             } finally {
                 btn.disabled = false;
             }
         }
+
+        function renderizarTabla(lista) {
+            const tbody = document.getElementById('cuerpo-tabla');
+            tbody.innerHTML = "";
+
+            lista.sort((a, b) => b.valor - a.valor);
+            lista.forEach(item => {
+                const row = `<tr>
+                    <td>${item.nombre}</td>
+                    <td class="num">${parseFloat(item.valor).toFixed(6)}</td>
+                </tr>`;
+                tbody.innerHTML += row;
+            });
+        }
+
+        function renderizarArbol(nodo, elementoPadre) {
+            // Limpiar si es la raíz
+            if (elementoPadre.id === "arbol-raiz") elementoPadre.innerHTML = "";
+
+            const li = document.createElement('li');
+            const tieneHijos = nodo.hijos && nodo.hijos.length > 0;
+
+            const valorSpan = nodo.valor ? `<span class="val-tag">[${nodo.valor.toFixed(6)}]</span>` : "";
+            li.innerHTML = `<span class="${tieneHijos ? 'folder' : 'file'}">${nodo.nombre}</span>${valorSpan}`;
+
+            if (tieneHijos) {
+                const ul = document.createElement('ul');
+
+                nodo.hijos.sort((a, b) => b.valor - a.valor);
+
+                nodo.hijos.forEach(hijo => renderizarArbol(hijo, ul));
+                li.appendChild(ul);
+            }
+
+            elementoPadre.appendChild(li);
+        }
     </script>
 </body>
+
 </html>

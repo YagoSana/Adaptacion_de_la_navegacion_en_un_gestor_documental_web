@@ -3,6 +3,21 @@ import json
 import lector  
 import logica
 
+def obtener_estructura_arbol(G, nodo_actual, valores):
+    """
+    Construye la estructura jerárquica incluyendo los valores de PageRank.
+    """
+    nivel_actual = G.nodes[nodo_actual].get('nivel', 0)
+    # Buscar si tiene hijos
+    hijos = [v for v in G.neighbors(nodo_actual) if G.nodes[v].get('nivel', 0) > nivel_actual]
+    
+    return {
+        "nombre": nodo_actual,
+        "valor": round(valores.get(nodo_actual, 0), 6), # Añadir peso aqui
+        "hijos": [obtener_estructura_arbol(G, h, valores) for h in sorted(hijos)]
+    }
+
+
 def iniciar_servidor():
     # Comunicacion en ip local
     # Usando sockets bind y listen como en PSD
@@ -58,14 +73,26 @@ def iniciar_servidor():
                 valores = logica.version_personalizacion_likes(G, likes, referencias, p_libro, p_ref)
 
                 # Preparamos los datos para enviarlos a la web
-                nodos_data = []
-                for nodo in sorted(valores.keys()):
-                    nodos_data.append({
-                        "nombre": nodo,
-                        "valor": round(valores[nodo], 6)
-                    })
+                nodos_data = [
+                    {"nombre": n, "valor": round(v, 6)} 
+                    for n, v in valores.items()
+                ]
 
-                cuerpo_json = json.dumps(nodos_data)
+
+                # Preparar datos para arbol tambien
+                raices = [n for n, attr in G.nodes(data=True) if attr.get('nivel') == 0]
+                raiz = raices[0] if raices else None
+                
+                arbol_jerarquico = {}
+                if raiz:
+                    arbol_jerarquico = obtener_estructura_arbol(G, raiz, valores)
+
+                respuesta_final = {
+                    "tabla": nodos_data,
+                    "arbol": arbol_jerarquico
+                }
+
+                cuerpo_json = json.dumps(respuesta_final)
                 
                 # --- RESPUESTA HTTP ---
                 respuesta_http = (
