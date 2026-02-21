@@ -4,6 +4,8 @@ import lector
 import logica
 
 def iniciar_servidor():
+    # Comunicacion en ip local
+    # Usando sockets bind y listen como en PSD
     HOST, PORT = '127.0.0.1', 8080
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -16,7 +18,7 @@ def iniciar_servidor():
         peticion = conn.recv(2048).decode('utf-8')
         
         if peticion:
-            # El navegador preguntará primero con OPTIONS si puede comunicar 
+            # El navegador pregunta primero con OPTIONS si puede comunicar 
             if peticion.startswith('OPTIONS'):
                 respuesta = "HTTP/1.1 204 No Content\r\n" \
                             "Access-Control-Allow-Origin: *\r\n" \
@@ -29,22 +31,25 @@ def iniciar_servidor():
 
             try:
 
-                # EXTRAEMOS LOS VALORES DEL CLIENTE
-                # Buscamos el cuerpo del JSON en la petición
+                # Extraer datos del cliente desde el json body
                 partes = peticion.split('\r\n\r\n')
                 if len(partes) > 1:
                     body_data = json.loads(partes[1])
-                    p_libro = body_data.get('peso_libro', 2.0)
-                    p_ref = body_data.get('peso_referencia', 3.0)
+                    p_libro = body_data.get('peso_libro')
+                    p_ref = body_data.get('peso_referencia')
+
+                    # LOG DE CONTROL
+                    print(f"DEBUG PARSEADO -> Libro: {p_libro} (Tipo: {type(p_libro)}), Ref: {p_ref}")
+
                 else:
                     # Valores default
-                    p_libro, p_ref = 2.0, 3.0
+                    p_libro, p_ref = 1.0, 2.0
 
 
-                # Usar funciones que ya hay en logica.py
+                # Usar funciones de logica.py (de las demos anteriores)
                 G = lector.leer_entrada("entrada.txt")
                 
-                # Hacer referencias segun dataset
+                # Hacer referencias segun dataset, actualmente a mano
                 referencias = [("Historical mystery", "Detective mystery"), ("Mystery thriller", "Psychological thriller")]
                 
                 # Likes asociados al dataset, actualmente a mano

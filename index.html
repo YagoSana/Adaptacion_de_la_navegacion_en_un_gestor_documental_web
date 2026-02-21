@@ -23,8 +23,10 @@
             </div>
         </div>
 
-        <button onclick="cargarResultados()">Calcular / Actualizar Datos</button>
-
+        <div class="buttons">
+            <button onclick="cargarResultados()">Calcular / Actualizar Datos</button>
+            <button>Mostrar Grafo</button>
+        </div>
         <table id="tabla-resultados">
             <thead>
                 <tr>
@@ -45,6 +47,11 @@
             // Capturar los valores de los sliders
             const pesoLibro = document.getElementById('input_libros').value;
             const pesoRef = document.getElementById('input_refs').value;
+
+            // LOG DE CONTROL
+            console.log("DEBUG CLIENTE:");
+            console.log("- Valor Slider Libros:", pesoLibro);
+            console.log("- Valor Slider Refs:", pesoRef);
             
             btn.innerText = "Calculando...";
             btn.disabled = true;
@@ -60,6 +67,10 @@
                     })
                 });
                 const datos = await res.json();
+                datos.sort((a, b) => b.valor - a.valor); // ordenar
+
+                // Limpiar la tabla antes de imprimir por si hay basura
+                tbody.innerHTML = "";
 
                 datos.forEach(item => {
                     const row = `<tr>

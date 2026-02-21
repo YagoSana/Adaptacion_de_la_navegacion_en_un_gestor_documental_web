@@ -10,6 +10,7 @@ def version_personalizacion_likes(G, likes_libros, referencias=None, peso_libros
     - Las categorías superiores heredan importancia de sus libros
     
     """
+
     # Identificar nodos hoja (libros)
     niveles = [G.nodes[n].get('nivel', 0) for n in G.nodes()]
     max_nivel = max(niveles) if niveles else 0
@@ -23,19 +24,21 @@ def version_personalizacion_likes(G, likes_libros, referencias=None, peso_libros
     G_completo = nx.DiGraph()
     G_completo.add_nodes_from(G.nodes(data=True))
     
-    # Añadir jerarquías bidireccionales
-    referencias_set = set(referencias) if referencias else set()
+    # Añadir relaciones jerárquicas con pesos
+    referencias_set = set(referencias)
     for u, v in G.edges():
+        # Solo si no es una referencia
         if (u, v) not in referencias_set:
-            G_completo.add_edge(u, v)
-            G_completo.add_edge(v, u)
+            peso = peso_libros if v in nodos_hoja else 1.0
+            G_completo.add_edge(u, v, weight=peso)
+            G_completo.add_edge(v, u, weight=peso)
     
-    # Añadir referencias si existen
-    if referencias:
-        for u, v in referencias:
-            G_completo.add_edge(u, v)
-            G_completo.add_edge(v, u)
+    # Añadir referencias con su peso
+    for u, v in referencias:
+        G_completo.add_edge(u, v, weight=peso_ref)
+        G_completo.add_edge(v, u, weight=peso_ref)
     
+
     # CREAR VECTOR DE PERSONALIZACIÓN basado en likes
     # Solo los libros (hojas) reciben importancia inicial
     total_likes = sum(likes_libros.values())
@@ -44,13 +47,14 @@ def version_personalizacion_likes(G, likes_libros, referencias=None, peso_libros
     for nodo in G_completo.nodes():
         if nodo in likes_libros:
             # Normalizar: cada libro tiene peso proporcional a sus likes
-            personalization[nodo] = ((likes_libros[nodo] * peso_libros) / total_likes)
+
+            personalization[nodo] = ((likes_libros[nodo] * peso_libros * 10) / total_likes)
         else:
             # Nodos intermedios (categorías) empiezan con 0
             personalization[nodo] = 0.0
     
-    # PageRank con personalización
-    pr = nx.pagerank(G_completo, alpha=alpha, personalization=personalization)
+    # PageRank con personalización y pesos
+    pr = nx.pagerank(G_completo, alpha=alpha, personalization=personalization, weight='weight')
     
     return pr
 
