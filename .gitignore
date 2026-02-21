@@ -1,2 +1,6 @@
-**/__pycache__/"dataset_limpio.json" 
-"goodreads_books_mystery_thriller_crime.json.gz" 
+# Sobreescribe el .gitignore con la sintaxis correcta
+cat > .gitignore << 'EOF'
+__pycache__/
+dataset_limpio.json
+goodreads_books_mystery_thriller_crime.json.gz
+EOF
