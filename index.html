@@ -5,6 +5,76 @@
     <meta charset="UTF-8">
     <title>Resultados PageRank</title>
     <link rel="stylesheet" href="style.css">
+    <style>
+        /* Árbol colapsable */
+        .tree ul {
+            display: none;
+            padding-left: 20px;
+        }
+        .tree ul.abierto {
+            display: block;
+        }
+        .tree li {
+            list-style: none;
+            margin: 4px 0;
+        }
+        .toggle {
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 6px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+        .toggle:hover {
+            background: #f0f4ff;
+        }
+        .toggle .icono {
+            font-size: 11px;
+            color: #888;
+            width: 12px;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .toggle.abierto .icono {
+            transform: rotate(90deg);
+        }
+        .toggle .nombre {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .toggle.hoja .nombre {
+            font-weight: 400;
+            color: #444;
+            font-size: 0.9rem;
+        }
+        .val-tag {
+            font-family: 'Consolas', monospace;
+            font-size: 0.8rem;
+            color: #3498db;
+            background: #eaf4fd;
+            padding: 1px 5px;
+            border-radius: 3px;
+        }
+        /* Tabla paginada */
+        .paginacion {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+        .paginacion button {
+            padding: 4px 10px;
+            font-size: 0.85rem;
+            margin: 0;
+        }
+        .paginacion button.activa {
+            background: #2980b9;
+        }
+    </style>
 </head>
 
 <body>
@@ -18,7 +88,6 @@
                 <input type="range" id="input_libros" min="1" max="5" step="0.5" value="3"
                     oninput="val_libros.innerText=this.value">
             </div>
-
             <div class="control-group">
                 <label>Peso Referencias: <span id="val_refs">3</span></label>
                 <input type="range" id="input_refs" min="1" max="5" step="0.5" value="3"
@@ -43,13 +112,9 @@
                             <th>Valor PageRank</th>
                         </tr>
                     </thead>
-                    <tbody id="cuerpo-tabla">
-                        <tr>
-                            <td colspan="2">
-                            </td>
-                        </tr>
-                    </tbody>
+                    <tbody id="cuerpo-tabla"></tbody>
                 </table>
+                <div class="paginacion" id="paginacion"></div>
             </div>
 
             <div class="panel">
@@ -63,16 +128,21 @@
     </div>
 
     <script>
+        // ── Estado global ──────────────────────────────────────────
+        let tablaCompleta = [];
+        let paginaActual = 0;
+        const POR_PAGINA = 50;
+
+        // ── Carga principal ────────────────────────────────────────
         async function cargarResultados() {
             const btn = document.getElementById('btn-main');
             const pesoLibro = document.getElementById('input_libros').value;
-            const pesoRef = document.getElementById('input_refs').value;
+            const pesoRef   = document.getElementById('input_refs').value;
 
             btn.disabled = true;
             btn.innerText = "Calculando...";
 
             try {
-                // Petición al servidor de sockets
                 const res = await fetch('http://localhost:8080', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -82,11 +152,17 @@
                     })
                 });
 
-                const datosCache = await res.json();
+                const datos = await res.json();
 
-                // Renderizar ambas vistas a la vez
-                renderizarTabla(datosCache.tabla);
-                renderizarArbol(datosCache.arbol, document.getElementById('arbol-raiz'));
+                // Tabla paginada
+                tablaCompleta = datos.tabla.sort((a, b) => b.valor - a.valor);
+                paginaActual = 0;
+                renderizarPagina(0);
+
+                // Árbol lazy
+                const raiz = document.getElementById('arbol-raiz');
+                raiz.innerHTML = "";
+                construirNodo(datos.arbol, raiz, true);
 
                 btn.innerText = "Actualizar Datos";
             } catch (err) {
@@ -98,40 +174,107 @@
             }
         }
 
-        function renderizarTabla(lista) {
+        // ── Tabla paginada ─────────────────────────────────────────
+        function renderizarPagina(pagina) {
+            paginaActual = pagina;
             const tbody = document.getElementById('cuerpo-tabla');
             tbody.innerHTML = "";
 
-            lista.sort((a, b) => b.valor - a.valor);
-            lista.forEach(item => {
-                const row = `<tr>
-                    <td>${item.nombre}</td>
-                    <td class="num">${parseFloat(item.valor).toFixed(6)}</td>
-                </tr>`;
-                tbody.innerHTML += row;
+            const inicio = pagina * POR_PAGINA;
+            const slice  = tablaCompleta.slice(inicio, inicio + POR_PAGINA);
+
+            slice.forEach((item, i) => {
+                const fila = document.createElement('tr');
+                fila.innerHTML = `
+                    <td>#${inicio + i + 1} ${item.nombre}</td>
+                    <td class="num">${item.valor.toFixed(6)}</td>`;
+                tbody.appendChild(fila);
             });
+
+            // Botones de paginación
+            const totalPaginas = Math.ceil(tablaCompleta.length / POR_PAGINA);
+            const div = document.getElementById('paginacion');
+            div.innerHTML = "";
+
+            // Mostrar máx 7 botones alrededor de la página actual
+            let inicio_p = Math.max(0, pagina - 3);
+            let fin_p    = Math.min(totalPaginas - 1, pagina + 3);
+
+            if (inicio_p > 0) {
+                agregarBotonPag(div, 0, pagina);
+                if (inicio_p > 1) div.innerHTML += '<span>…</span>';
+            }
+            for (let p = inicio_p; p <= fin_p; p++) agregarBotonPag(div, p, pagina);
+            if (fin_p < totalPaginas - 1) {
+                if (fin_p < totalPaginas - 2) div.innerHTML += '<span>…</span>';
+                agregarBotonPag(div, totalPaginas - 1, pagina);
+            }
         }
 
-        function renderizarArbol(nodo, elementoPadre) {
-            // Limpiar si es la raíz
-            if (elementoPadre.id === "arbol-raiz") elementoPadre.innerHTML = "";
+        function agregarBotonPag(contenedor, p, actual) {
+            const btn = document.createElement('button');
+            btn.innerText = p + 1;
+            if (p === actual) btn.classList.add('activa');
+            btn.onclick = () => renderizarPagina(p);
+            contenedor.appendChild(btn);
+        }
 
-            const li = document.createElement('li');
+        // ── Árbol lazy colapsable ──────────────────────────────────
+        function construirNodo(nodo, padre, abierto = false) {
             const tieneHijos = nodo.hijos && nodo.hijos.length > 0;
+            const li = document.createElement('li');
 
-            const valorSpan = nodo.valor ? `<span class="val-tag">[${nodo.valor.toFixed(6)}]</span>` : "";
-            li.innerHTML = `<span class="${tieneHijos ? 'folder' : 'file'}">${nodo.nombre}</span>${valorSpan}`;
+            const toggle = document.createElement('div');
+            toggle.className = 'toggle' + (tieneHijos ? '' : ' hoja');
+
+            const icono = document.createElement('span');
+            icono.className = 'icono';
+            icono.textContent = tieneHijos ? '▶' : '•';
+
+            const nombre = document.createElement('span');
+            nombre.className = 'nombre';
+            nombre.textContent = nodo.nombre;
+
+            const val = document.createElement('span');
+            val.className = 'val-tag';
+            val.textContent = nodo.valor.toFixed(6);
+
+            toggle.appendChild(icono);
+            toggle.appendChild(nombre);
+            toggle.appendChild(val);
+            li.appendChild(toggle);
 
             if (tieneHijos) {
+                // Ordenar hijos por valor descendente
+                const hijosOrdenados = [...nodo.hijos].sort((a, b) => b.valor - a.valor);
+
                 const ul = document.createElement('ul');
+                if (abierto) ul.classList.add('abierto');
 
-                nodo.hijos.sort((a, b) => b.valor - a.valor);
+                let hijosGenerados = false;
 
-                nodo.hijos.forEach(hijo => renderizarArbol(hijo, ul));
+                toggle.addEventListener('click', () => {
+                    const estaAbierto = ul.classList.toggle('abierto');
+                    toggle.classList.toggle('abierto', estaAbierto);
+
+                    // Lazy: solo generamos los hijos la primera vez que se abre
+                    if (estaAbierto && !hijosGenerados) {
+                        hijosGenerados = true;
+                        hijosOrdenados.forEach(hijo => construirNodo(hijo, ul, false));
+                    }
+                });
+
+                // Si viene abierto por defecto (raíz), generar hijos ya
+                if (abierto) {
+                    hijosGenerados = true;
+                    hijosOrdenados.forEach(hijo => construirNodo(hijo, ul, false));
+                    toggle.classList.add('abierto');
+                }
+
                 li.appendChild(ul);
             }
 
-            elementoPadre.appendChild(li);
+            padre.appendChild(li);
         }
     </script>
 </body>
