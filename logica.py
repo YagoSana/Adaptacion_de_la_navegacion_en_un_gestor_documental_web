@@ -1,6 +1,6 @@
 import networkx as nx
 from lector import leer_entrada, leer_likes
-from imprimir import imprimir_arbol_con_pesos
+# from imprimir import imprimir_arbol_con_pesos  # Ya no es necesario: la visualización se hace desde la web
 
 def version_personalizacion_likes(G, likes_libros, referencias=None, peso_libros=3, peso_ref=3, alpha=0.85):
     """
@@ -56,17 +56,18 @@ def version_personalizacion_likes(G, likes_libros, referencias=None, peso_libros
 
 
 # ============================================================
-# PROGRAMA PRINCIPAL
+# PROGRAMA PRINCIPAL (ejecución directa, no necesaria desde server.py)
 # ============================================================
 
-DATASET = "dataset_limpio.json"
-
-G, referencias = leer_entrada(DATASET)
-likes_libros   = leer_likes(DATASET)
-
-peso_libros = 3
-peso_ref    = 3
-
-pr = version_personalizacion_likes(G, likes_libros, referencias, peso_libros, peso_ref)
-
-imprimir_arbol_con_pesos(G, pr, "Personalización por Likes (dataset Goodreads)")
+# DATASET = "dataset_limpio.json"
+#
+# G, referencias = leer_entrada(DATASET)
+# likes_libros   = leer_likes(DATASET)
+#
+# peso_libros = 3
+# peso_ref    = 3
+#
+# pr = version_personalizacion_likes(G, likes_libros, referencias, peso_libros, peso_ref)
+#
+# La impresión por consola ya no es necesaria: la visualización se realiza desde la interfaz web.
+# imprimir_arbol_con_pesos(G, pr, "Personalización por Likes (dataset Goodreads)")
