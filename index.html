@@ -6,255 +6,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600;700&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --ink: #1a1a2e;
-            --paper: #f7f3ee;
-            --cream: #ede8e0;
-            --accent: #c8a96e;
-            --accent-dark: #a07840;
-            --muted: #8a8070;
-            --panel: #ffffff;
-            --border: #ddd8ce;
-            --star-on: #c8a96e;
-            --star-off: #d8d0c4;
-            --tag-bg: #f0ebe2;
-            --rec-bg: #fffbf4;
-        }
-
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--paper);
-            color: var(--ink);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        /* ── Header ── */
-        header {
-            background: var(--ink);
-            color: var(--paper);
-            padding: 18px 40px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            border-bottom: 3px solid var(--accent);
-            flex-shrink: 0;
-        }
-        header h1 { font-family: 'Playfair Display', serif; font-size: 1.6rem; letter-spacing: 0.02em; }
-        header h1 span { color: var(--accent); }
-
-        .header-controls { display: flex; gap: 20px; align-items: center; }
-        .slider-row { display: flex; flex-direction: column; font-size: 0.75rem; color: #aaa; gap: 4px; }
-        .slider-row input[type="range"] { accent-color: var(--accent); width: 110px; }
-        .slider-row span { color: var(--accent); font-weight: 600; }
-
-        .btn-calc {
-            background: var(--accent); color: var(--ink); border: none;
-            padding: 9px 20px; border-radius: 6px;
-            font-family: 'DM Sans', sans-serif; font-weight: 600; font-size: 0.85rem;
-            cursor: pointer; transition: background 0.2s, transform 0.1s; white-space: nowrap;
-        }
-        .btn-calc:hover { background: var(--accent-dark); color: #fff; }
-        .btn-calc:active { transform: scale(0.97); }
-        .btn-calc:disabled { opacity: 0.5; cursor: wait; }
-
-        /* ── Main ── */
-        .main { flex: 1; display: grid; grid-template-columns: 1fr 1fr; overflow: hidden; }
-
-        /* ── Left panel ── */
-        .left-panel { border-right: 1px solid var(--border); display: flex; flex-direction: column; overflow: hidden; }
-
-        .tabs-bar { display: flex; border-bottom: 1px solid var(--border); background: var(--cream); flex-shrink: 0; }
-        .tab-btn {
-            flex: 1; padding: 14px 10px; border: none; background: transparent;
-            font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; color: var(--muted);
-            cursor: pointer; border-bottom: 3px solid transparent; transition: all 0.2s;
-            text-align: center; margin-bottom: -1px;
-        }
-        .tab-btn.active { color: var(--ink); border-bottom-color: var(--accent); background: var(--panel); font-weight: 600; }
-        .tab-btn:hover:not(.active) { color: var(--ink); background: #ede8e044; }
-
-        .tab-content { display: none; flex: 1; overflow-y: auto; padding: 20px; }
-        .tab-content.active { display: block; }
-
-        .section-title {
-            font-family: 'Playfair Display', serif; font-size: 1rem;
-            margin-bottom: 14px; color: var(--ink);
-            display: flex; align-items: center; gap: 10px;
-        }
-        .section-title .badge {
-            background: var(--accent); color: var(--ink);
-            font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 700;
-            padding: 2px 8px; border-radius: 20px;
-        }
-        .section-divider { border: none; border-top: 1px dashed var(--border); margin: 20px 0; }
-
-        .rec-title {
-            font-family: 'Playfair Display', serif; font-size: 1rem;
-            margin-bottom: 14px; color: var(--ink);
-            display: flex; align-items: center; gap: 10px;
-        }
-        .rec-title .badge {
-            background: #e8f4e8; color: #2d6a2d;
-            font-family: 'DM Sans', sans-serif; font-size: 0.68rem; font-weight: 700;
-            padding: 2px 8px; border-radius: 20px;
-        }
-
-        /* ── Cards ── */
-        .book-list { display: flex; flex-direction: column; gap: 8px; }
-
-        .book-card {
-            background: var(--panel); border: 1px solid var(--border); border-radius: 10px;
-            padding: 12px 14px; display: flex; align-items: flex-start; gap: 12px;
-            transition: box-shadow 0.2s, transform 0.15s;
-        }
-        .book-card.rec { background: var(--rec-bg); border-color: #e8dcc8; }
-        .book-card:hover { box-shadow: 0 4px 14px rgba(0,0,0,0.08); transform: translateY(-1px); }
-
-        .book-rank {
-            font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 700;
-            color: var(--accent); min-width: 26px; line-height: 1; padding-top: 2px;
-        }
-        .book-rank.rec-icon { font-size: 1rem; color: #5a9a5a; }
-
-        .book-info { flex: 1; }
-        .book-title { font-size: 0.88rem; font-weight: 600; color: var(--ink); line-height: 1.3; margin-bottom: 4px; }
-        .book-genre {
-            font-size: 0.72rem; color: var(--muted); background: var(--tag-bg);
-            display: inline-block; padding: 2px 8px; border-radius: 20px; margin-bottom: 5px;
-        }
-        .my-rating-label { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
-
-        /* Stars */
-        .stars-wrap { display: flex; gap: 2px; margin-top: 3px; }
-        .star {
-            font-size: 17px; color: var(--star-off); cursor: pointer;
-            transition: color 0.12s, transform 0.1s; user-select: none; line-height: 1;
-        }
-        .star:hover, .star.lit { color: var(--star-on); }
-        .star:active { transform: scale(1.3); }
-
-        /* Empty state */
-        .empty-state { text-align: center; color: var(--muted); padding: 40px 20px; font-size: 0.88rem; }
-        .empty-state .icon { font-size: 2rem; margin-bottom: 10px; }
-        .empty-state p { line-height: 1.6; }
-
-        /* ── Right panel ── */
-        .right-panel { display: flex; flex-direction: column; background: var(--panel); overflow: hidden; }
-
-        .explorer-header { padding: 16px 20px 0; border-bottom: 1px solid var(--border); flex-shrink: 0; }
-        .explorer-header h2 { font-family: 'Playfair Display', serif; font-size: 1rem; margin-bottom: 10px; color: var(--ink); }
-
-        .search-box {
-            display: flex; align-items: center;
-            border: 1.5px solid var(--border); border-radius: 8px; overflow: hidden;
-            margin-bottom: 12px; background: var(--paper); transition: border-color 0.2s;
-        }
-        .search-box:focus-within { border-color: var(--accent); }
-        .search-box .search-icon { padding: 0 10px; color: var(--muted); font-size: 14px; flex-shrink: 0; }
-        .search-box input {
-            flex: 1; border: none; background: transparent;
-            padding: 9px 8px 9px 0; font-family: 'DM Sans', sans-serif;
-            font-size: 0.85rem; color: var(--ink); outline: none;
-        }
-        .search-clear { padding: 0 10px; color: var(--muted); cursor: pointer; font-size: 16px; display: none; flex-shrink: 0; }
-        .search-clear.visible { display: block; }
-        .search-clear:hover { color: var(--ink); }
-
-        .explorer-body { flex: 1; overflow-y: auto; padding: 6px 12px 20px; }
-
-        /* Search results */
-        .search-results { display: flex; flex-direction: column; gap: 2px; }
-        .search-result-item {
-            display: flex; align-items: center; gap: 8px;
-            padding: 7px 10px; border-radius: 6px; transition: background 0.12s;
-        }
-        .search-result-item:hover { background: var(--tag-bg); }
-        .sri-icon { font-size: 13px; flex-shrink: 0; }
-        .sri-label { flex: 1; font-size: 0.84rem; color: var(--ink); }
-        .sri-label .highlight { background: #fff3c4; border-radius: 2px; padding: 0 1px; }
-        .sri-stars { display: flex; gap: 1px; flex-shrink: 0; }
-        .sri-star {
-            font-size: 15px; color: var(--star-off); cursor: pointer;
-            user-select: none; transition: color 0.1s; line-height: 1;
-        }
-        .sri-star.lit, .sri-star:hover { color: var(--star-on); }
-
-        /* Tree */
-        .node-row {
-            display: flex; align-items: center; gap: 6px;
-            padding: 5px 8px; border-radius: 6px; cursor: pointer;
-            transition: background 0.15s; user-select: none;
-        }
-        .node-row:hover { background: var(--tag-bg); }
-        .node-row .arrow { font-size: 10px; color: var(--muted); width: 12px; transition: transform 0.2s; flex-shrink: 0; }
-        .node-row.open .arrow { transform: rotate(90deg); }
-        .node-row .node-icon { font-size: 13px; flex-shrink: 0; }
-        .node-row .node-label { font-size: 0.85rem; color: var(--ink); font-weight: 500; flex: 1; }
-        .node-row.leaf .node-label { font-weight: 400; color: #444; font-size: 0.82rem; }
-        .node-row.leaf .arrow { visibility: hidden; }
-
-        .node-children { display: none; padding-left: 18px; border-left: 1px dashed var(--border); margin-left: 11px; }
-        .node-children.open { display: block; }
-
-        /* Ver mas button */
-        .ver-mas-btn {
-            font-size: 0.78rem;
-            color: var(--accent-dark);
-            cursor: pointer;
-            padding: 5px 8px;
-            border-radius: 6px;
-            display: inline-block;
-            margin: 2px 0 4px;
-            transition: background 0.15s, color 0.15s;
-            user-select: none;
-        }
-        .ver-mas-btn:hover { background: var(--tag-bg); color: var(--ink); }
-
-        /* Leaf stars — always visible under each book in tree */
-        .leaf-stars-row { display: flex; align-items: center; gap: 2px; padding: 2px 8px 6px 34px; }
-        .leaf-star {
-            font-size: 14px; color: var(--star-off); cursor: pointer;
-            user-select: none; transition: color 0.1s; line-height: 1;
-        }
-        .leaf-star.lit, .leaf-star:hover { color: var(--star-on); }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 4px; }
-        ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-        /* Overlay */
-        .calculating-overlay {
-            position: fixed; inset: 0; background: rgba(26,26,46,0.25);
-            display: flex; align-items: center; justify-content: center;
-            z-index: 999; backdrop-filter: blur(2px);
-            opacity: 0; pointer-events: none; transition: opacity 0.2s;
-        }
-        .calculating-overlay.show { opacity: 1; pointer-events: all; }
-        .calc-box { background: var(--panel); border-radius: 12px; padding: 28px 40px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); }
-        .calc-box p { font-size: 0.88rem; color: var(--muted); margin-top: 10px; }
-        .spinner {
-            display: inline-block; width: 24px; height: 24px;
-            border: 3px solid #ccc; border-top-color: var(--accent);
-            border-radius: 50%; animation: spin 0.6s linear infinite;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        @media (max-width: 768px) {
-            .main { grid-template-columns: 1fr; overflow: visible; }
-            .left-panel, .right-panel { overflow: visible; min-height: 50vh; }
-            header { flex-direction: column; gap: 14px; }
-            .header-controls { flex-wrap: wrap; justify-content: center; }
-        }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
+<!-- Overlay de carga -->
 <div class="calculating-overlay" id="overlay">
     <div class="calc-box">
         <div class="spinner"></div>
@@ -262,71 +18,77 @@
     </div>
 </div>
 
+<!-- Header -->
 <header>
     <h1>Book<span>Rank</span></h1>
     <div class="header-controls">
         <div class="slider-row">
             <label>Peso Libros: <span id="lbl_libros">3</span></label>
-            <input type="range" id="input_libros" min="1" max="5" step="0.5" value="3"
-                   oninput="lbl_libros.innerText=this.value">
+            <input type="range" id="input_libros" min="1" max="5" step="0.5" value="3">
         </div>
         <div class="slider-row">
             <label>Peso Referencias: <span id="lbl_refs">3</span></label>
-            <input type="range" id="input_refs" min="1" max="5" step="0.5" value="3"
-                   oninput="lbl_refs.innerText=this.value">
+            <input type="range" id="input_refs" min="1" max="5" step="0.5" value="3">
         </div>
-        <button class="btn-calc" id="btn-calc" onclick="calcular()">Calcular</button>
+        <button class="btn-calc" id="btn-calc">Calcular</button>
     </div>
 </header>
 
 <div class="main">
 
-    <!-- ── Left: Tabs ── -->
+    <!-- Panel izquierdo: Tabs -->
     <div class="left-panel">
         <div class="tabs-bar">
-            <button class="tab-btn active" onclick="switchTab('popular',this)">🏆 Top 10 Populares</button>
-            <button class="tab-btn" onclick="switchTab('personal',this)">⭐ Mis Valoraciones</button>
+            <button class="tab-btn active" data-tab="popular">🏆 Top 10 Populares</button>
+            <button class="tab-btn" data-tab="personal">⭐ Mis Valoraciones</button>
         </div>
 
-        <!-- Tab: Popular -->
         <div class="tab-content active" id="tab-popular">
             <p class="section-title">Los más populares <span class="badge">TOP 10</span></p>
             <div class="book-list" id="list-popular">
-                <div class="empty-state"><div class="icon">📚</div><p>Pulsa <strong>Calcular</strong> para ver<br>los libros más populares.</p></div>
+                <div class="empty-state">
+                    <div class="icon">📚</div>
+                    <p>Pulsa <strong>Calcular</strong> para ver<br>los libros más populares.</p>
+                </div>
             </div>
         </div>
 
-        <!-- Tab: Personal -->
         <div class="tab-content" id="tab-personal">
             <p class="section-title">Mis libros valorados <span class="badge">PERSONAL</span></p>
             <div class="book-list" id="list-personal">
-                <div class="empty-state"><div class="icon">⭐</div><p>Valora libros en el explorador<br>y aparecerán aquí.</p></div>
+                <div class="empty-state">
+                    <div class="icon">⭐</div>
+                    <p>Valora libros en el explorador<br>y aparecerán aquí.</p>
+                </div>
             </div>
 
             <hr class="section-divider">
 
-            <p class="rec-title">Recomendaciones para ti <span class="badge">SIMILAR</span></p>
+            <p class="rec-title">Recomendaciones para ti <span class="badge rec-badge">SIMILAR</span></p>
             <div class="book-list" id="list-recomendaciones">
-                <div class="empty-state"><div class="icon">🔮</div><p>Basadas en libros similares<br>a los que más te han gustado.</p></div>
+                <div class="empty-state">
+                    <div class="icon">🔮</div>
+                    <p>Basadas en libros similares<br>a los que más te han gustado.</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- ── Right: Explorer ── -->
+    <!-- Panel derecho: Explorador -->
     <div class="right-panel">
         <div class="explorer-header">
             <h2>📂 Explorador de Géneros</h2>
             <div class="search-box">
                 <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="Buscar libro o categoría…"
-                       oninput="debouncedSearch(this.value)">
-                <span class="search-clear" id="search-clear" onclick="limpiarBusqueda()">✕</span>
+                <input type="text" id="search-input" placeholder="Buscar libro o categoría…">
+                <span class="search-clear" id="search-clear">✕</span>
             </div>
         </div>
         <div class="explorer-body">
             <div id="tree-container">
                 <div class="empty-state" style="padding:40px 10px">
-                    <div class="icon">🌳</div><p>El árbol aparecerá<br>tras calcular.</p>
+                    <div class="icon">🌳</div>
+                    <p>El árbol aparecerá<br>tras calcular.</p>
                 </div>
             </div>
             <div id="search-results-container" style="display:none">
@@ -334,450 +96,9 @@
             </div>
         </div>
     </div>
+
 </div>
 
-<script>
-// ══════════════════════════════════════════════════════════
-// ESTADO
-// ══════════════════════════════════════════════════════════
-let datosGlobales = null;
-let misRatings = {};
-let todasHojasFlat = [];   // [{ id, nombre, valor, path:[] }]
-let similarMap = {};       // { book_id: [similar_id, ...] }
-
-try { misRatings = JSON.parse(localStorage.getItem('bookrank_ratings') || '{}'); } catch(e) {}
-
-// ══════════════════════════════════════════════════════════
-// TABS
-// ══════════════════════════════════════════════════════════
-function switchTab(id, btn) {
-    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById('tab-' + id).classList.add('active');
-}
-
-// ══════════════════════════════════════════════════════════
-// CALCULAR
-// ══════════════════════════════════════════════════════════
-async function calcular() {
-    const btn = document.getElementById('btn-calc');
-    const overlay = document.getElementById('overlay');
-    btn.disabled = true;
-    btn.textContent = 'Calculando…';
-    overlay.classList.add('show');
-
-    try {
-        const res = await fetch('http://localhost:8080', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                peso_libro: parseFloat(document.getElementById('input_libros').value),
-                peso_referencia: parseFloat(document.getElementById('input_refs').value)
-            })
-        });
-        datosGlobales = await res.json();
-        if (datosGlobales.similar_map) similarMap = datosGlobales.similar_map;
-
-        todasHojasFlat = [];
-        recogerHojas(datosGlobales.arbol, todasHojasFlat, []);
-        todasHojasFlat.sort((a, b) => b.valor - a.valor); // orden desc para que slice en búsqueda coja los mejores
-
-        renderPopular();
-        renderPersonal();
-        renderRecomendaciones();
-        renderArbol(datosGlobales.arbol);
-        btn.textContent = 'Actualizar';
-    } catch(err) {
-        console.error(err);
-        alert('Error de conexión. ¿Está server.py encendido?');
-        btn.textContent = 'Reintentar';
-    } finally {
-        btn.disabled = false;
-        overlay.classList.remove('show');
-    }
-}
-
-// ══════════════════════════════════════════════════════════
-// HELPERS
-// ══════════════════════════════════════════════════════════
-function esHoja(n) { return !n.hijos || n.hijos.length === 0; }
-
-function recogerHojas(nodo, acc, path) {
-    if (esHoja(nodo)) { acc.push({ ...nodo, path: [...path] }); return; }
-    (nodo.hijos || []).forEach(h => recogerHojas(h, acc, [...path, nodo.nombre]));
-}
-
-function pathStr(hoja) { return (hoja.path || []).slice(-2).join(' › '); }
-
-function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-
-function highlight(text, q) {
-    const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return escHtml(text).replace(new RegExp(`(${safeQ})`, 'gi'), '<span class="highlight">$1</span>');
-}
-
-// ══════════════════════════════════════════════════════════
-// RENDER POPULAR
-// ══════════════════════════════════════════════════════════
-function renderPopular() {
-    if (!datosGlobales) return;
-    const top = [...todasHojasFlat].sort((a,b) => b.valor - a.valor).slice(0,10);
-    const c = document.getElementById('list-popular');
-    c.innerHTML = '';
-    top.forEach((l,i) => c.appendChild(mkCard(l, i+1, true, false)));
-}
-
-// ══════════════════════════════════════════════════════════
-// RENDER PERSONAL
-// ══════════════════════════════════════════════════════════
-function renderPersonal() {
-    if (!datosGlobales) return;
-    const c = document.getElementById('list-personal');
-    const ratedIds = Object.keys(misRatings).filter(id => misRatings[id] > 0);
-
-    if (!ratedIds.length) {
-        c.innerHTML = `<div class="empty-state"><div class="icon">⭐</div><p>Valora libros en el explorador<br>y aparecerán aquí.</p></div>`;
-        return;
-    }
-
-    const hojaMap = {};
-    todasHojasFlat.forEach(h => { hojaMap[h.id] = h; });
-
-    const scored = ratedIds
-        .filter(id => hojaMap[id])
-        .map(id => ({ ...hojaMap[id], _s: misRatings[id] * hojaMap[id].valor }))
-        .sort((a,b) => b._s - a._s);
-
-    c.innerHTML = '';
-    if (!scored.length) {
-        c.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>No encontrados en el dataset.</p></div>`;
-        return;
-    }
-    scored.forEach((l,i) => c.appendChild(mkCard(l, i+1, true, true)));
-}
-
-// ══════════════════════════════════════════════════════════
-// RENDER RECOMENDACIONES
-// ══════════════════════════════════════════════════════════
-function renderRecomendaciones() {
-    if (!datosGlobales) return;
-    const c = document.getElementById('list-recomendaciones');
-    const ratedIds = Object.keys(misRatings).filter(id => misRatings[id] > 0);
-
-    if (!ratedIds.length) {
-        c.innerHTML = `<div class="empty-state"><div class="icon">🔮</div><p>Basadas en libros similares<br>a los que más te han gustado.</p></div>`;
-        return;
-    }
-
-    const hojaMap = {};
-    todasHojasFlat.forEach(h => { hojaMap[h.id] = h; });
-    const ratedSet = new Set(ratedIds);
-    const candidatos = {};
-
-    // Via similar_map si existe
-    if (Object.keys(similarMap).length) {
-        ratedIds.forEach(id => {
-            const myR = misRatings[id] || 0;
-            (similarMap[id] || []).forEach(sid => {
-                if (!ratedSet.has(sid) && hojaMap[sid])
-                    candidatos[sid] = (candidatos[sid] || 0) + myR * hojaMap[sid].valor;
-            });
-        });
-    }
-
-    // Fallback: mismo género (último elemento del path)
-    if (!Object.keys(candidatos).length) {
-        const generoScore = {};
-        ratedIds.forEach(id => {
-            const h = hojaMap[id];
-            if (h && h.path) {
-                const g = h.path[h.path.length - 1];
-                generoScore[g] = (generoScore[g] || 0) + (misRatings[id] || 0);
-            }
-        });
-        todasHojasFlat.forEach(h => {
-            if (ratedSet.has(h.id) || !h.path) return;
-            const g = h.path[h.path.length - 1];
-            if (generoScore[g])
-                candidatos[h.id] = h.valor * generoScore[g];
-        });
-    }
-
-    const recs = Object.entries(candidatos)
-        .filter(([id]) => hojaMap[id])
-        .sort(([,a],[,b]) => b - a)
-        .slice(0, 10)
-        .map(([id]) => hojaMap[id]);
-
-    c.innerHTML = '';
-    if (!recs.length) {
-        c.innerHTML = `<div class="empty-state"><div class="icon">🔮</div><p>Valora más libros para<br>obtener recomendaciones.</p></div>`;
-        return;
-    }
-    recs.forEach((l,i) => c.appendChild(mkCardRec(l, i+1)));
-}
-
-// ══════════════════════════════════════════════════════════
-// TARJETAS
-// ══════════════════════════════════════════════════════════
-function mkCard(libro, rank, showGenre, showMyRating) {
-    const card = document.createElement('div');
-    card.className = 'book-card';
-    card.dataset.id = libro.id;
-    const rating = misRatings[libro.id] || 0;
-    const gen = showGenre ? pathStr(libro) : '';
-    card.innerHTML = `
-        <div class="book-rank">${rank}</div>
-        <div class="book-info">
-            <div class="book-title">${escHtml(libro.nombre)}</div>
-            ${gen ? `<span class="book-genre">${escHtml(gen)}</span>` : ''}
-            <div class="stars-wrap" data-id="${libro.id}">
-                ${[1,2,3,4,5].map(s=>`<span class="star ${s<=rating?'lit':''}" data-star="${s}" onclick="rateBook('${libro.id}',${s},event)">★</span>`).join('')}
-            </div>
-            ${showMyRating && rating > 0 ? `<div class="my-rating-label">Tu valoración: ${rating}/5</div>` : ''}
-        </div>`;
-    return card;
-}
-
-function mkCardRec(libro, rank) {
-    const card = document.createElement('div');
-    card.className = 'book-card rec';
-    card.dataset.id = libro.id;
-    const rating = misRatings[libro.id] || 0;
-    card.innerHTML = `
-        <div class="book-rank rec-icon">✦</div>
-        <div class="book-info">
-            <div class="book-title">${escHtml(libro.nombre)}</div>
-            <span class="book-genre">${escHtml(pathStr(libro))}</span>
-            <div class="stars-wrap" data-id="${libro.id}">
-                ${[1,2,3,4,5].map(s=>`<span class="star ${s<=rating?'lit':''}" data-star="${s}" onclick="rateBook('${libro.id}',${s},event)">★</span>`).join('')}
-            </div>
-        </div>`;
-    return card;
-}
-
-// ══════════════════════════════════════════════════════════
-// RATING — actualiza todas las instancias sin re-renderizar árbol
-// ══════════════════════════════════════════════════════════
-function rateBook(id, stars, event) {
-    if (event) event.stopPropagation();
-    misRatings[id] = (misRatings[id] === stars) ? 0 : stars;
-    try { localStorage.setItem('bookrank_ratings', JSON.stringify(misRatings)); } catch(e) {}
-
-    const v = misRatings[id];
-
-    // Actualizar stars-wrap (tarjetas izquierda)
-    document.querySelectorAll(`.stars-wrap[data-id="${id}"] .star`).forEach(s => {
-        s.classList.toggle('lit', parseInt(s.dataset.star) <= v);
-    });
-    // Actualizar leaf-stars-row (árbol derecha)
-    document.querySelectorAll(`.leaf-stars-row[data-id="${id}"] .leaf-star`).forEach(s => {
-        s.classList.toggle('lit', parseInt(s.dataset.star) <= v);
-    });
-    // Actualizar sri-stars (resultados búsqueda)
-    document.querySelectorAll(`.sri-stars[data-id="${id}"] .sri-star`).forEach(s => {
-        s.classList.toggle('lit', parseInt(s.dataset.star) <= v);
-    });
-
-    // Re-render solo las listas, no el árbol
-    renderPersonal();
-    renderRecomendaciones();
-}
-
-// ══════════════════════════════════════════════════════════
-// ÁRBOL
-// ══════════════════════════════════════════════════════════
-function renderArbol(arbol) {
-    const c = document.getElementById('tree-container');
-    c.innerHTML = '';
-    c.appendChild(mkNodo(arbol, 0));
-    // Expandir raíz
-    const firstRow = c.querySelector('.node-row');
-    if (firstRow) firstRow.click();
-}
-
-const PAGE_SIZE = 10;
-
-function mkNodo(nodo, depth) {
-    const wrapper = document.createElement('div');
-    wrapper.dataset.id = nodo.id;
-
-    const hijos = [...(nodo.hijos || [])].sort((a,b) => b.valor - a.valor);
-    const tieneHijos = hijos.length > 0;
-
-    const row = document.createElement('div');
-    row.className = 'node-row' + (tieneHijos ? '' : ' leaf');
-    row.style.paddingLeft = (8 + depth * 4) + 'px';
-    const icon = tieneHijos ? (depth===0?'📚':depth===1?'📂':'🏷️') : '📖';
-    row.innerHTML = `<span class="arrow">▶</span><span class="node-icon">${icon}</span><span class="node-label">${escHtml(nodo.nombre)}</span>`;
-    wrapper.appendChild(row);
-
-    if (tieneHijos) {
-        const children = document.createElement('div');
-        children.className = 'node-children';
-        let loaded = false;
-        let shown = 0;
-
-        // Subcarpetas siempre primero y completas; paginación solo sobre hojas
-        const subCarpetas = hijos.filter(h => h.hijos && h.hijos.length > 0);
-        const hojas       = hijos.filter(h => !h.hijos || h.hijos.length === 0);
-        const ordenado    = [...subCarpetas, ...hojas];
-
-        function mostrarMas() {
-            const sig = Math.min(shown + PAGE_SIZE, ordenado.length);
-            for (let i = shown; i < sig; i++) {
-                children.appendChild(mkNodo(ordenado[i], depth + 1));
-            }
-            shown = sig;
-
-            const viejoBtn = children.querySelector('.ver-mas-btn');
-            if (viejoBtn) viejoBtn.remove();
-
-            if (shown < ordenado.length) {
-                const restantes = ordenado.length - shown;
-                const btn = document.createElement('div');
-                btn.className = 'ver-mas-btn';
-                btn.style.paddingLeft = (8 + (depth + 1) * 4) + 'px';
-                btn.textContent = `Ver ${Math.min(PAGE_SIZE, restantes)} más (${restantes} restantes)`;
-                btn.addEventListener('click', e => { e.stopPropagation(); mostrarMas(); });
-                children.appendChild(btn);
-            }
-        }
-
-        row.addEventListener('click', () => {
-            if (!loaded) { loaded = true; mostrarMas(); }
-            const open = row.classList.toggle('open');
-            children.classList.toggle('open', open);
-        });
-
-        wrapper.appendChild(children);
-    } else {
-        wrapper.appendChild(mkLeafStars(nodo.id));
-        row.addEventListener('click', e => e.stopPropagation());
-    }
-
-    return wrapper;
-}
-
-function mkLeafStars(id) {
-    const div = document.createElement('div');
-    div.className = 'leaf-stars-row';
-    div.dataset.id = id;
-    const v = misRatings[id] || 0;
-    [1,2,3,4,5].forEach(s => {
-        const star = document.createElement('span');
-        star.className = 'leaf-star' + (s <= v ? ' lit' : '');
-        star.textContent = '★';
-        star.dataset.star = s;
-        star.addEventListener('click', e => rateBook(id, s, e));
-        div.appendChild(star);
-    });
-    return div;
-}
-
-// ══════════════════════════════════════════════════════════
-// BUSCADOR — filtra hojas y categorías, muestra lista plana
-// ══════════════════════════════════════════════════════════
-// ── Debounce: espera 250ms tras la última tecla antes de buscar ───────────────
-let _searchTimer = null;
-function debouncedSearch(value) {
-    // Actualizar botón de limpiar y ocultar/mostrar árbol de inmediato (sin lag)
-    const clearBtn = document.getElementById('search-clear');
-    const treeEl   = document.getElementById('tree-container');
-    const resultsEl = document.getElementById('search-results-container');
-    const q = value.trim();
-
-    if (!q) {
-        clearBtn.classList.remove('visible');
-        treeEl.style.display = '';
-        resultsEl.style.display = 'none';
-        clearTimeout(_searchTimer);
-        return;
-    }
-    clearBtn.classList.add('visible');
-    treeEl.style.display = 'none';
-    resultsEl.style.display = '';
-
-    clearTimeout(_searchTimer);
-    _searchTimer = setTimeout(() => onSearch(value), 250);
-}
-
-const SEARCH_LIMIT = 50; // máximo de libros a renderizar en resultados
-
-function onSearch(value) {
-    const q = value.trim().toLowerCase();
-    const listEl = document.getElementById('search-results-list');
-
-    if (!q || !datosGlobales) return;
-
-    listEl.innerHTML = '';
-
-    // Categorías coincidentes
-    const cats = [];
-    function buscarCats(nodo, path) {
-        if (esHoja(nodo)) return;
-        if (nodo.nombre.toLowerCase().includes(q)) cats.push({ ...nodo, _pathStr: path.slice(-2).join(' › ') });
-        (nodo.hijos||[]).forEach(h => buscarCats(h, [...path, nodo.nombre]));
-    }
-    buscarCats(datosGlobales.arbol, []);
-
-    // Hojas coincidentes — solo las primeras SEARCH_LIMIT, ya ordenadas por valor
-    const hojasFilt = todasHojasFlat
-        .filter(h => h.nombre.toLowerCase().includes(q))
-        .slice(0, SEARCH_LIMIT); // todasHojasFlat ya viene ordenada tras calcular
-
-    if (!cats.length && !hojasFilt.length) {
-        listEl.innerHTML = `<div class="empty-state" style="padding:30px 10px"><div class="icon">🔍</div><p>Sin resultados para "<strong>${escHtml(q)}</strong>"</p></div>`;
-        return;
-    }
-
-    // Usar fragment para insertar todo de golpe (más rápido que appendChild uno a uno)
-    const frag = document.createDocumentFragment();
-
-    cats.forEach(cat => {
-        const item = document.createElement('div');
-        item.className = 'search-result-item';
-        item.innerHTML = `<span class="sri-icon">📂</span><span class="sri-label">${highlight(cat.nombre, q)}</span>`;
-        frag.appendChild(item);
-    });
-
-    hojasFilt.forEach(libro => {
-        const rating = misRatings[libro.id] || 0;
-        const item = document.createElement('div');
-        item.className = 'search-result-item';
-        item.innerHTML = `
-            <span class="sri-icon">📖</span>
-            <span class="sri-label">
-                ${highlight(libro.nombre, q)}<br>
-                <span style="font-size:0.7rem;color:var(--muted)">${escHtml(pathStr(libro))}</span>
-            </span>
-            <div class="sri-stars" data-id="${libro.id}">
-                ${[1,2,3,4,5].map(s=>`<span class="sri-star ${s<=rating?'lit':''}" data-star="${s}" onclick="rateBook('${libro.id}',${s},event)">★</span>`).join('')}
-            </div>`;
-        frag.appendChild(item);
-    });
-
-    // Aviso si había más resultados recortados
-    const totalHojas = todasHojasFlat.filter(h => h.nombre.toLowerCase().includes(q)).length;
-    if (totalHojas > SEARCH_LIMIT) {
-        const aviso = document.createElement('div');
-        aviso.style.cssText = 'text-align:center;font-size:0.75rem;color:var(--muted);padding:8px;';
-        aviso.textContent = `Mostrando ${SEARCH_LIMIT} de ${totalHojas} resultados. Escribe más para afinar.`;
-        frag.appendChild(aviso);
-    }
-
-    listEl.appendChild(frag);
-}
-
-function limpiarBusqueda() {
-    const input = document.getElementById('search-input');
-    input.value = '';
-    debouncedSearch('');
-    input.focus();
-}
-</script>
+<script type="module" src="app.mjs"></script>
 </body>
 </html>
