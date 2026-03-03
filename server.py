@@ -50,7 +50,7 @@ def iniciar_servidor():
     # Precargamos el grafo y los likes una sola vez
     print(f"Cargando dataset {DATASET}...")
     G, referencias = lector.leer_entrada(DATASET)
-    likes = lector.leer_likes(DATASET)
+    ratings_data = lector.leer_likes(DATASET)
     print("Dataset cargado.")
 
     while True:
@@ -78,7 +78,7 @@ def iniciar_servidor():
                     p_libro, p_ref = 3.0, 3.0
 
                 print(f"Calculando PageRank (peso_libro={p_libro}, peso_ref={p_ref})...")
-                valores = logica.version_personalizacion_likes(G, likes, referencias, p_libro, p_ref)
+                valores = logica.version_personalizacion_likes(G, ratings_data, referencias, p_libro, p_ref)
 
                 # Tabla global ordenada por valor
                 nodos_data = [

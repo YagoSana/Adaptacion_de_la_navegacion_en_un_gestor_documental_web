@@ -265,19 +265,25 @@ def leer_entrada(ruta_json):
 
 
 def leer_likes(ruta_json):
-    """
-    Devuelve un dict {book_id: average_rating} para usar como peso en logica.py
-    """
+  
     with open(ruta_json, 'r', encoding='utf-8') as f:
         libros = json.load(f)
 
-    likes = {}
+    ratings_data = {}
     for libro in libros:
         bid = libro.get("book_id")
-        rating = libro.get("average_rating", 0)
-        if bid:
-            try:
-                likes[bid] = float(rating)
-            except (ValueError, TypeError):
-                likes[bid] = 0.0
-    return likes
+        if not bid:
+            continue
+        try:
+            avg = float(libro.get("average_rating") or 0)
+        except (ValueError, TypeError):
+            avg = 0.0
+        try:
+            count = int(libro.get("ratings_count") or 0)
+        except (ValueError, TypeError):
+            count = 0
+        ratings_data[bid] = {
+            "average_rating": avg,
+            "ratings_count":  count,
+        }
+    return ratings_data
