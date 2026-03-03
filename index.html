@@ -36,6 +36,29 @@
 
 <div class="main">
 
+    <!-- Panel derecho: Explorador -->
+    <div class="right-panel">
+        <div class="explorer-header">
+            <h2>📂 Explorador de Géneros</h2>
+            <div class="search-box">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="search-input" placeholder="Buscar libro o categoría…">
+                <span class="search-clear" id="search-clear">✕</span>
+            </div>
+        </div>
+        <div class="explorer-body">
+            <div id="tree-container">
+                <div class="empty-state" style="padding:40px 10px">
+                    <div class="icon">🌳</div>
+                    <p>El árbol aparecerá<br>tras calcular.</p>
+                </div>
+            </div>
+            <div id="search-results-container" style="display:none">
+                <div class="search-results" id="search-results-list"></div>
+            </div>
+        </div>
+    </div>
+
     <!-- Panel izquierdo: Tabs -->
     <div class="left-panel">
         <div class="tabs-bar">
@@ -74,28 +97,7 @@
         </div>
     </div>
 
-    <!-- Panel derecho: Explorador -->
-    <div class="right-panel">
-        <div class="explorer-header">
-            <h2>📂 Explorador de Géneros</h2>
-            <div class="search-box">
-                <span class="search-icon">🔍</span>
-                <input type="text" id="search-input" placeholder="Buscar libro o categoría…">
-                <span class="search-clear" id="search-clear">✕</span>
-            </div>
-        </div>
-        <div class="explorer-body">
-            <div id="tree-container">
-                <div class="empty-state" style="padding:40px 10px">
-                    <div class="icon">🌳</div>
-                    <p>El árbol aparecerá<br>tras calcular.</p>
-                </div>
-            </div>
-            <div id="search-results-container" style="display:none">
-                <div class="search-results" id="search-results-list"></div>
-            </div>
-        </div>
-    </div>
+    
 
 </div>
 

@@ -109,6 +109,12 @@ def procesar_dataset(ruta_entrada, ruta_salida):
                 "ratings_count":  libro.get("ratings_count"),
                 "tiene_similar":  len(similar) > 0,
                 "similar_books":  similar,          # lista vacía si no tiene
+                "isbn":           libro.get("isbn"),
+                "authors":        libro.get("authors"),
+                "descripcion":    libro.get("description"),
+                "publisher":      libro.get("publisher"),
+                "num_pages":     libro.get("num_pages"),
+                "publication_year": libro.get("publication_year")
             }
 
             if genero is None:

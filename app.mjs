@@ -258,7 +258,12 @@ function mkCard(libro, rank, showGenre, showMyRating) {
             </div>
             ${myRatingHtml}
         </div>`;
-
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+        if (!e.target.closest('[data-star]')) {
+            abrirPanelLibro(libro);
+        }
+    });
     return card;
 }
 
@@ -279,6 +284,12 @@ function mkCardRec(libro, rank) {
             </div>
         </div>`;
 
+    card.style.cursor = 'pointer';
+    card.addEventListener('click', (e) => {
+        if (!e.target.closest('[data-star]')) {
+            abrirPanelLibro(libro);
+        }
+    });
     return card;
 }
 
@@ -391,7 +402,17 @@ function mkNodo(nodo, depth) {
 
     } else {
         wrapper.appendChild(mkLeafStars(nodo.id));
-        row.addEventListener('click', e => e.stopPropagation());
+        
+        // Annadimos cursor pointer para indicar que es clickeable
+        row.style.cursor = 'pointer'; 
+        
+        row.addEventListener('click', e => {
+            e.stopPropagation();
+            // Evitamos abrir el panel si el usuario hizo clic en una estrella para valorar
+            if (!e.target.closest('[data-star]')) {
+                abrirPanelLibro(nodo);
+            }
+        });
     }
 
     return wrapper;
@@ -491,6 +512,12 @@ function onSearch(value) {
             <div class="sri-stars" data-id="${libro.id}">
                 ${renderStars(libro.id, rating, 'sri-star')}
             </div>`;
+        item.style.cursor = 'pointer';
+        item.addEventListener('click', (e) => {
+            if (!e.target.closest('[data-star]')) {
+                abrirPanelLibro(libro);
+            }
+        });
         frag.appendChild(item);
     });
 
@@ -510,4 +537,15 @@ function limpiarBusqueda() {
     input.value = '';
     debouncedSearch('');
     input.focus();
+}
+
+// ══════════════════════════════════════════════════════════
+// PANEL LATERAL
+// ══════════════════════════════════════════════════════════
+function abrirPanelLibro(libro) {
+    console.log("Abriendo panel para:", libro.nombre);
+    
+    // document.getElementById('panel-lateral').classList.add('visible');
+    // document.getElementById('panel-titulo').textContent = libro.nombre;
+    // document.getElementById('panel-genero').textContent = pathStr(libro);
 }
