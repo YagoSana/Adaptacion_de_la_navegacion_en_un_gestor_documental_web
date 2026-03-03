@@ -235,10 +235,20 @@ def leer_entrada(ruta_json):
 
         # Añadir nodo libro (nivel hoja) — book_id garantizado único
         nivel_libro = nivel_genero + 1
-        G.add_node(book_id, nivel=nivel_libro, display=title,
+        G.add_node(book_id,
+                   nivel=nivel_libro,
+                   display=title,
                    title=title,
                    average_rating=float(libro.get("average_rating") or 0),
-                   ratings_count=int(libro.get("ratings_count") or 0))
+                   ratings_count=int(libro.get("ratings_count") or 0),
+                   authors=libro.get("authors"),
+                   descripcion=libro.get("descripcion"),
+                   publisher=libro.get("publisher"),
+                   num_pages=libro.get("num_pages"),
+                   publication_year=libro.get("publication_year"),
+                   isbn=libro.get("isbn"),
+                   similar_books=libro.get("similar_books", []),
+                   tiene_similar=len(libro.get("similar_books", [])) > 0)
         G.add_edge(genero, book_id)
 
         # Recopilar referencias (similar_books dentro del dataset),

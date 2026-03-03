@@ -6,18 +6,37 @@ import logica
 DATASET = "dataset_limpio.json"
 
 def obtener_estructura_arbol(G, nodo_actual, valores):
-    nivel_actual = G.nodes[nodo_actual].get('nivel', 0)
+    atributos = G.nodes[nodo_actual]
+
+    nivel_actual = atributos.get('nivel', 0)
     hijos = [v for v in G.neighbors(nodo_actual) if G.nodes[v].get('nivel', 0) > nivel_actual]
 
-    # Usar nombre legible si existe, si no el ID
-    nombre = G.nodes[nodo_actual].get('display', nodo_actual)
+    # Usar nombre legible si existe, si no usar ID
+    nombre = atributos.get('display', nodo_actual)
 
-    return {
+    # Construimos el diccionario base (carpetas y libros lo tienen)
+    nodo_dict = {
         "nombre": nombre,
         "id":     nodo_actual,
         "valor":  round(valores.get(nodo_actual, 0), 6),
         "hijos":  [obtener_estructura_arbol(G, h, valores) for h in sorted(hijos)]
     }
+    
+    # Si es un nodo hoja le inyectamos toda la información extra que viene de lector.py
+    if len(hijos) == 0:
+        nodo_dict["title"]            = atributos.get("title")
+        nodo_dict["authors"]          = atributos.get("authors")
+        nodo_dict["descripcion"]      = atributos.get("descripcion")
+        nodo_dict["average_rating"]   = atributos.get("average_rating")
+        nodo_dict["ratings_count"]    = atributos.get("ratings_count")
+        nodo_dict["publisher"]        = atributos.get("publisher")
+        nodo_dict["num_pages"]        = atributos.get("num_pages")
+        nodo_dict["publication_year"] = atributos.get("publication_year")
+        nodo_dict["isbn"]             = atributos.get("isbn")
+        nodo_dict["similar_books"]    = atributos.get("similar_books", [])
+        nodo_dict["tiene_similar"]    = atributos.get("tiene_similar", False)
+
+    return nodo_dict
 
 
 def iniciar_servidor():

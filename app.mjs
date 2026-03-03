@@ -543,9 +543,69 @@ function limpiarBusqueda() {
 // PANEL LATERAL
 // ══════════════════════════════════════════════════════════
 function abrirPanelLibro(libro) {
-    console.log("Abriendo panel para:", libro.nombre);
+
+    const panelContenedor = document.querySelector('.left-panel'); 
+    if (!panelContenedor) return;
+
+    // Si ya había un panel de un libro abierto, lo eliminamos para que no se acumulen
+    const panelAnterior = panelContenedor.querySelector('.book-detail-panel');
+    if (panelAnterior) panelAnterior.remove();
+
+    // Preparar los datos
+    const titulo      = libro.title || libro.nombre || 'Título desconocido';
+    const autores     = libro.authors ? libro.authors : 'Autor desconocido';
+    const descripcion = libro.descripcion || 'No hay sinopsis disponible para este libro.';
+    const genero      = libro.genero || (libro.path ? pathStr(libro) : 'Sin categoría');
+    const rating      = libro.average_rating ? `${libro.average_rating} / 5` : 'N/A';
+    const votos       = libro.ratings_count ? `(${libro.ratings_count} votos)` : '';
+    const paginas     = libro.num_pages ? `${libro.num_pages} págs.` : 'N/A';
+    const anio        = libro.publication_year || 'N/A';
+    const editorial   = libro.publisher || 'N/A';
+    const isbn        = libro.isbn || 'N/A';
+
+    // Crear tercera ventana flotante
+    const infoDiv = document.createElement('div');
+    infoDiv.className = 'book-detail-panel';
     
-    // document.getElementById('panel-lateral').classList.add('visible');
-    // document.getElementById('panel-titulo').textContent = libro.nombre;
-    // document.getElementById('panel-genero').textContent = pathStr(libro);
+    infoDiv.innerHTML = `
+        <div class="info-header">
+            <h2 class="info-titulo">${escHtml(titulo)}</h2>
+            <button id="btn-cerrar-info" class="btn-cerrar-simple">✕</button>
+        </div>
+        <p class="info-autores"><strong>${escHtml(autores)}</strong></p>
+        
+        <div class="info-badges">
+            <span class="badge badge-genero">🏷️ ${escHtml(genero)}</span>
+            <span class="badge badge-rating">⭐ ${escHtml(rating)} <small>${escHtml(votos)}</small></span>
+        </div>
+
+        <div class="info-sinopsis">
+            <h3>Sinopsis</h3>
+            <p>${escHtml(descripcion)}</p>
+        </div>
+
+        <hr class="info-divider">
+
+        <div class="info-metadata">
+            <div><strong>Páginas:</strong> ${escHtml(paginas)}</div>
+            <div><strong>Año:</strong> ${escHtml(anio)}</div>
+            <div><strong>Editorial:</strong> ${escHtml(editorial)}</div>
+            <div><strong>ISBN:</strong> ${escHtml(isbn)}</div>
+        </div>
+        
+        ${libro.tiene_similar && libro.similar_books && libro.similar_books.length > 0 ? `
+            <div class="info-similares">
+                <strong>Libros similares recomendados (IDs):</strong> 
+                ${escHtml(libro.similar_books.join(', '))}
+            </div>
+        ` : ''}
+    `;
+
+    // Poner en panel izquierdo
+    panelContenedor.appendChild(infoDiv);
+
+    // Acción del botón X: destruye el div
+    document.getElementById('btn-cerrar-info').addEventListener('click', () => {
+        infoDiv.remove();
+    });
 }
