@@ -568,29 +568,31 @@ function abrirPanelLibro(libro) {
     infoDiv.className = 'book-detail-panel';
     
     infoDiv.innerHTML = `
-        <div class="info-header">
-            <h2 class="info-titulo">${escHtml(titulo)}</h2>
-            <button id="btn-cerrar-info" class="btn-cerrar-simple">✕</button>
-        </div>
-        <p class="info-autores"><strong>${escHtml(autores)}</strong></p>
-        
-        <div class="info-badges">
-            <span class="badge badge-genero">🏷️ ${escHtml(genero)}</span>
-            <span class="badge badge-rating">⭐ ${escHtml(rating)} <small>${escHtml(votos)}</small></span>
-        </div>
+        <div class="detalles-libro">
+            <div class="info-header">
+                <h2 class="info-titulo">${escHtml(titulo)}</h2>
+                <button id="btn-cerrar-info" class="btn-cerrar-simple">✕</button>
+            </div>
+            <!--
+            <p class="info-autores"><strong>${escHtml(autores)}</strong></p>
+            -->
+            
+            <div class="info-badges">
+                <span class="badge badge-genero">🏷️ ${escHtml(genero)}</span>
+                <span class="badge badge-rating">⭐ ${escHtml(rating)} <small>${escHtml(votos)}</small></span>
+            </div>
 
-        <div class="info-sinopsis">
-            <h3>Sinopsis</h3>
-            <p>${escHtml(descripcion)}</p>
-        </div>
+            <div class="info-sinopsis">
+                <h3>Sinopsis</h3>
+                <p>${escHtml(descripcion)}</p>
+            </div>
 
-        <hr class="info-divider">
-
-        <div class="info-metadata">
-            <div><strong>Páginas:</strong> ${escHtml(paginas)}</div>
-            <div><strong>Año:</strong> ${escHtml(anio)}</div>
-            <div><strong>Editorial:</strong> ${escHtml(editorial)}</div>
-            <div><strong>ISBN:</strong> ${escHtml(isbn)}</div>
+            <div class="info-metadata">
+                <div><strong>Páginas:</strong> ${escHtml(paginas)}</div>
+                <div><strong>Año:</strong> ${escHtml(anio)}</div>
+                <div><strong>Editorial:</strong> ${escHtml(editorial)}</div>
+                <div><strong>ISBN:</strong> ${escHtml(isbn)}</div>
+            </div>
         </div>
         
         ${libro.tiene_similar && libro.similar_books && libro.similar_books.length > 0 ? `
