@@ -239,6 +239,7 @@ def leer_entrada(ruta_json):
                    nivel=nivel_libro,
                    display=title,
                    title=title,
+                   genero=genero,
                    average_rating=float(libro.get("average_rating") or 0),
                    ratings_count=int(libro.get("ratings_count") or 0),
                    authors=libro.get("authors"),

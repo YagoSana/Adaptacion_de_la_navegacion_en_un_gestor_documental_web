@@ -26,6 +26,7 @@ def obtener_estructura_arbol(G, nodo_actual, valores):
     if len(hijos) == 0:
         nodo_dict["title"]            = atributos.get("title")
         nodo_dict["authors"]          = atributos.get("authors")
+        nodo_dict["genero"]           = atributos.get("genero")
         nodo_dict["descripcion"]      = atributos.get("descripcion")
         nodo_dict["average_rating"]   = atributos.get("average_rating")
         nodo_dict["ratings_count"]    = atributos.get("ratings_count")

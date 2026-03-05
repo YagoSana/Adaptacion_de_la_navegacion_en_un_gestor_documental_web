@@ -566,6 +566,8 @@ function abrirPanelLibro(libro) {
     // Crear tercera ventana flotante
     const infoDiv = document.createElement('div');
     infoDiv.className = 'book-detail-panel';
+
+    console.log('Libro seleccionado:', libro);
     
     infoDiv.innerHTML = `
         <div class="detalles-libro">
