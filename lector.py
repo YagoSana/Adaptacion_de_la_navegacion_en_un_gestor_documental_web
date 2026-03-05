@@ -39,7 +39,7 @@ JERARQUIA = {
         "padre": "Fiction",
         "subgrupo": "Mystery&Crime fiction/Crime"
     },
-    "Crime": {
+    "Generic crime": {
         "padre": "Fiction",
         "subgrupo": "Mystery&Crime fiction/Crime"
     },
@@ -55,8 +55,8 @@ JERARQUIA = {
         "padre": "Fiction",
         "subgrupo": "Mystery&Crime fiction/Mystery"
     },
-    "Mystery": {
-        "padre": "Fiction",
+    "Generic mystery": {
+       "padre": "Fiction",
         "subgrupo": "Mystery&Crime fiction/Mystery"
     },
     "Psychological thriller": {
@@ -83,7 +83,7 @@ JERARQUIA = {
         "padre": "Fiction",
         "subgrupo": "Mystery&Crime fiction/Thriller"
     },
-    "Thriller": {
+    "Generic thriller": {
         "padre": "Fiction",
         "subgrupo": "Mystery&Crime fiction/Thriller"
     },
@@ -91,7 +91,7 @@ JERARQUIA = {
         "padre": "Fiction",
         "subgrupo": "Mystery&Crime fiction/Suspense"
     },
-    "Suspense": {
+    "Generic suspense": {
         "padre": "Fiction",
         "subgrupo": "Mystery&Crime fiction/Suspense"
     },

@@ -4,7 +4,7 @@ import re
 from collections import defaultdict
 
 # ============================================================
-# MAPEO: shelves del dataset -> categorías de tu árbol
+# MAPEO: shelves del dataset -> categorías del árbol
 # ============================================================
 MAPEO_GENEROS = {
     # Historical fiction
@@ -21,14 +21,14 @@ MAPEO_GENEROS = {
     "noir":                     "Noir crime",
     "hard-boiled":              "Hard boiled crime",
     "hardboiled":               "Hard boiled crime",
-    "crime":                    "Crime",
+    "crime":                    "Generic crime",
 
     # Mystery
     "cozy-mystery":             "Cozy mystery",
     "cozy":                     "Cozy mystery",
     "murder-mystery":           "Murder mystery",
     "paranormal-mystery":       "Paranormal mystery",
-    "mystery":                  "Mystery",
+    "mystery":                  "Generic mystery",
 
     # Thriller
     "psychological-thriller":   "Psychological thriller",
@@ -37,12 +37,12 @@ MAPEO_GENEROS = {
     "medical-thriller":         "Medical thriller",
     "supernatural-thriller":    "Supernatural thriller",
     "mystery-thriller":         "Mystery thriller",
-    "thriller":                 "Thriller",
+    "thriller":                 "Generic thriller",
 
     # Suspense
     "romantic-suspense":        "Love-inspired suspense",
     "love-inspired":            "Love-inspired suspense",
-    "suspense":                 "Suspense",
+    "suspense":                 "Generic suspense",
 }
 
 # Mínimo de votos en un shelf para tomarlo en cuenta

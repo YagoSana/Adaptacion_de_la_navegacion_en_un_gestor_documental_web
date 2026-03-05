@@ -350,8 +350,7 @@ function mkNodo(nodo, depth) {
     row.style.paddingLeft = (8 + depth * 4) + 'px';
 
     const icon = tieneHijos
-        ? (depth === 0 ? '📚' : depth === 1 ? '📂' : '🏷️')
-        : '📖';
+        ? (depth === 0 ? '📚' : '📂') : '📖';
 
     row.innerHTML = `
         <span class="arrow">▶</span>
