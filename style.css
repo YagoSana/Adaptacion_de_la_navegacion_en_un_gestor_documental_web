@@ -8,7 +8,7 @@
     --muted:      #8a8070;
     --panel:      #ffffff;
     --border:     #ddd8ce;
-    --star-on:    #c8a96e;
+    --star-on:    #b8860b;   /* dorado más oscuro y saturado cuando está seleccionada */
     --star-off:   #d8d0c4;
     --tag-bg:     #f0ebe2;
     --rec-bg:     #fffbf4;
@@ -90,6 +90,7 @@ header h1 span { color: var(--accent); }
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    position: relative;
 }
 
 .tabs-bar {
@@ -150,6 +151,8 @@ header h1 span { color: var(--accent); }
     padding: 2px 8px;
     border-radius: 20px;
 }
+
+.genre-badge { background: #e8f0fe; color: #1a47a0; }
 
 .section-divider { border: none; border-top: 1px dashed var(--border); margin: 20px 0; }
 
@@ -216,19 +219,73 @@ header h1 span { color: var(--accent); }
 
 .my-rating-label { font-size: 0.7rem; color: var(--muted); margin-top: 3px; }
 
-/* ── Stars ── */
+/* ── Peso medio ── */
+.peso-medio {
+    font-size: 0.72rem;
+    color: var(--accent-dark);
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* ── Botón quitar valoración ── */
+.btn-quitar {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+    flex-shrink: 0;
+    align-self: flex-start;
+    margin-top: 2px;
+    transition: background 0.15s, color 0.15s, border-color 0.15s;
+    line-height: 1.4;
+    letter-spacing: 0.01em;
+}
+
+.btn-quitar:hover {
+    background: #fde8e8;
+    border-color: #e08080;
+    color: #c0392b;
+}
+/* Peso propio del usuario — resaltado en verde */
+.peso-propio {
+    color: #1a6b3c !important;
+    background: #e8f5ee;
+    border-radius: 4px;
+    padding: 1px 5px;
+}
+
+/* Variante del botón quitar dentro del árbol */
+.btn-quitar-arbol {
+    display: block;
+    margin: 0 0 4px 34px;
+    padding: 2px 6px;
+    font-size: 0.65rem;
+}
+
+/* ── Stars — libros (panel lateral) ── */
 .stars-wrap { display: flex; gap: 2px; margin-top: 3px; }
 
 .star {
     font-size: 17px;
     color: var(--star-off);
     cursor: pointer;
-    transition: color 0.12s, transform 0.1s;
+    transition: color 0.12s, transform 0.1s, text-shadow 0.12s;
     user-select: none;
     line-height: 1;
 }
 
-.star:hover, .star.lit { color: var(--star-on); }
+.star:hover { color: var(--accent); }
+
+.star.lit {
+    color: var(--star-on);
+    text-shadow: 0 0 6px rgba(184, 134, 11, 0.45);
+}
+
 .star:active { transform: scale(1.3); }
 
 /* ── Empty state ── */
@@ -328,11 +385,15 @@ header h1 span { color: var(--accent); }
     color: var(--star-off);
     cursor: pointer;
     user-select: none;
-    transition: color 0.1s;
+    transition: color 0.1s, text-shadow 0.1s;
     line-height: 1;
 }
 
-.sri-star.lit, .sri-star:hover { color: var(--star-on); }
+.sri-star:hover { color: var(--accent); }
+.sri-star.lit {
+    color: var(--star-on);
+    text-shadow: 0 0 5px rgba(184, 134, 11, 0.4);
+}
 
 /* ── Tree ── */
 .node-row {
@@ -354,6 +415,16 @@ header h1 span { color: var(--accent); }
 .node-row.leaf .node-label { font-weight: 400; color: #444; font-size: 0.82rem; }
 .node-row.leaf .arrow { visibility: hidden; }
 
+/* Peso medio inline en el árbol */
+.node-peso {
+    font-size: 0.68rem;
+    color: var(--accent-dark);
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 2px;
+}
+
 .node-children { display: none; padding-left: 18px; border-left: 1px dashed var(--border); margin-left: 11px; }
 .node-children.open { display: block; }
 
@@ -371,7 +442,7 @@ header h1 span { color: var(--accent); }
 
 .ver-mas-btn:hover { background: var(--tag-bg); color: var(--ink); }
 
-/* Estrellas inline en el árbol */
+/* ── Estrellas árbol — libros (hojas) ── */
 .leaf-stars-row {
     display: flex;
     align-items: center;
@@ -384,11 +455,38 @@ header h1 span { color: var(--accent); }
     color: var(--star-off);
     cursor: pointer;
     user-select: none;
-    transition: color 0.1s;
+    transition: color 0.1s, text-shadow 0.1s;
     line-height: 1;
 }
 
-.leaf-star.lit, .leaf-star:hover { color: var(--star-on); }
+.leaf-star:hover { color: var(--accent); }
+.leaf-star.lit {
+    color: var(--star-on);
+    text-shadow: 0 0 5px rgba(184, 134, 11, 0.4);
+}
+
+/* ── Estrellas árbol — géneros y subgéneros ── */
+.genre-stars-row {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    padding: 1px 8px 5px 28px;
+}
+
+.genre-star {
+    font-size: 13px;
+    color: var(--star-off);
+    cursor: pointer;
+    user-select: none;
+    transition: color 0.1s, text-shadow 0.1s;
+    line-height: 1;
+}
+
+.genre-star:hover { color: var(--accent); }
+.genre-star.lit {
+    color: var(--star-on);
+    text-shadow: 0 0 5px rgba(184, 134, 11, 0.4);
+}
 
 /* ── Scrollbar ── */
 ::-webkit-scrollbar { width: 4px; }
@@ -442,18 +540,14 @@ header h1 span { color: var(--accent); }
     .header-controls { flex-wrap: wrap; justify-content: center; }
 }
 
-/* para la descripcion de libros*/
-.left-panel {
-    position: relative;
-}
-
+/* ── Panel detalle libro ── */
 .book-detail-panel {
     position: absolute;
-    top: 0px;
-    left: 0px;
+    top: 0;
+    left: 0;
     width: 100%;
     height: 100%;
-    background-color: var(--bg-color, #ffffff);
+    background-color: #ffffff;
     z-index: 10;
     padding: 20px;
     box-sizing: border-box;
@@ -473,17 +567,17 @@ header h1 span { color: var(--accent); }
     align-items: flex-start;
 }
 
-.info-badges span{
+.info-badges span {
     font-size: 0.8rem;
     margin-right: 20px;
     padding: 10px;
     padding-right: 18px;
 }
 
-.info-titulo { 
-    margin: 0; 
-    font-size: 1.5rem; 
-    color: var(--primary-color, #222);
+.info-titulo {
+    margin: 0;
+    font-size: 1.5rem;
+    color: #222;
 }
 
 .info-sinopsis {
@@ -491,13 +585,9 @@ header h1 span { color: var(--accent); }
     margin-right: 25px;
 }
 
-.info-sinopsis h3 {
-    margin-bottom: 10px;
-}
+.info-sinopsis h3 { margin-bottom: 10px; }
 
-.info-metadata div {
-    margin-bottom: 10px;
-}
+.info-metadata div { margin-bottom: 10px; }
 
 .btn-cerrar-simple {
     background: transparent;

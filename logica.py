@@ -2,28 +2,26 @@ import networkx as nx
 from lector import leer_entrada, leer_likes
 
 # ---------------------------------------------------------------------------
-# Promedio ponderado bayesiano 
+# Promedio ponderado bayesiano
 #
 #   Score = (v / (v + m)) * R  +  (m / (v + m)) * C
 #
-#   R = average_rating del libro
+#   R = average_rating del libro  (puede ser el del usuario si lo valoró)
 #   v = ratings_count del libro
 #   C = promedio global de todos los average_rating
 #   m = umbral mínimo de votos (percentil 50 por defecto)
 # ---------------------------------------------------------------------------
 
 def _bayesian_scores(ratings_data: dict, percentil_m: float = 0.5) -> dict:
-    
+
     if not ratings_data:
         return {}
 
     counts  = [d["ratings_count"]  for d in ratings_data.values()]
     ratings = [d["average_rating"] for d in ratings_data.values()]
 
-    # C: promedio global de valoraciones
     C = sum(ratings) / len(ratings)
 
-    # m: umbral mínimo de votos (percentil indicado)
     counts_sorted = sorted(counts)
     idx = int(len(counts_sorted) * percentil_m)
     m   = counts_sorted[min(idx, len(counts_sorted) - 1)]
@@ -39,28 +37,44 @@ def _bayesian_scores(ratings_data: dict, percentil_m: float = 0.5) -> dict:
 
 def version_personalizacion_likes(
     G,
-    ratings_data,           
+    ratings_data,
     referencias=None,
     peso_libros=3,
     peso_ref=3,
     alpha=0.85,
     percentil_m=0.5,
+    user_ratings=None,   # { book_id: 1-5 } — valoraciones personales del usuario
 ):
     """
-    PageRank personalizado donde:
-    - El vector de personalización se basa en el score bayesiano de cada libro
-      (combina average_rating y ratings_count de forma justa).
-    - Las referencias (similar_books) añaden aristas cruzadas entre géneros.
+    PageRank personalizado.
+    Si user_ratings contiene una valoración para un libro, su average_rating
+    se sustituye por esa valoración (escala 1-5) antes de calcular el score
+    bayesiano, de modo que el cálculo refleja las preferencias del usuario.
     """
     if referencias is None:
         referencias = []
+    if user_ratings is None:
+        user_ratings = {}
 
-    # --- Score bayesiano por libro ----------------------------------------
-    bayesian = _bayesian_scores(ratings_data, percentil_m)
+    # --- Aplicar valoraciones del usuario sobre ratings_data ---------------
+    # Hacemos una copia para no mutar el original (que se reutiliza entre peticiones)
+    ratings_data_efectivo = {}
+    for book_id, d in ratings_data.items():
+        if book_id in user_ratings and user_ratings[book_id] > 0:
+            # Sustituir average_rating por la valoración del usuario (1-5)
+            ratings_data_efectivo[book_id] = {
+                "average_rating": float(user_ratings[book_id]),
+                "ratings_count":  d["ratings_count"],
+            }
+        else:
+            ratings_data_efectivo[book_id] = d
 
-    # --- Identificar nodos hoja (libros): máximo nivel en el grafo ---------
-    niveles   = [G.nodes[n].get('nivel', 0) for n in G.nodes()]
-    max_nivel = max(niveles) if niveles else 0
+    # --- Score bayesiano por libro -----------------------------------------
+    bayesian = _bayesian_scores(ratings_data_efectivo, percentil_m)
+
+    # --- Identificar nodos hoja (libros) ------------------------------------
+    niveles    = [G.nodes[n].get('nivel', 0) for n in G.nodes()]
+    max_nivel  = max(niveles) if niveles else 0
     nodos_hoja = {n for n in G.nodes() if G.nodes[n].get('nivel', 0) == max_nivel}
 
     # --- Grafo bidireccional con pesos -------------------------------------
@@ -80,7 +94,7 @@ def version_personalizacion_likes(
             G_completo.add_edge(u, v, weight=peso_ref)
             G_completo.add_edge(v, u, weight=peso_ref)
 
-    # --- Vector de personalización (scores bayesianos normalizados) --------
+    # --- Vector de personalización -----------------------------------------
     personalization = {}
     for nodo in G_completo.nodes():
         if nodo in bayesian:
@@ -95,20 +109,3 @@ def version_personalizacion_likes(
     pr = nx.pagerank(G_completo, alpha=alpha, personalization=personalization, weight='weight')
 
     return pr
-
-
-# ============================================================
-# PROGRAMA PRINCIPAL (ejecución directa, no necesaria desde server.py)
-# ============================================================
-
-# DATASET = "dataset_limpio.json"
-#
-# G, referencias  = leer_entrada(DATASET)
-# ratings_data    = leer_likes(DATASET)   # ahora devuelve {nodo: {"average_rating": float, "ratings_count": int}}
-#
-# peso_libros = 3
-# peso_ref    = 3
-#
-# pr = version_personalizacion_likes(G, ratings_data, referencias, peso_libros, peso_ref)
-#
-# La impresión por consola ya no es necesaria: la visualización se realiza desde la interfaz web.

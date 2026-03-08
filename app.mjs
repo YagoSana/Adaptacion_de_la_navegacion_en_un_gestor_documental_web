@@ -1,26 +1,24 @@
 // ══════════════════════════════════════════════════════════
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════════════════
-let datosGlobales  = null;
-let todasHojasFlat = [];  // [{ id, nombre, valor, path[] }]
-let similarMap     = {};  // { book_id: [similar_id, ...] }
-let misRatings     = {};
+let datosGlobales   = null;
+let todasHojasFlat  = [];
+let similarMap      = {};
+let misRatings      = {};  // { book_id: 1-5 }
+let misGenreRatings = {};  // { nodeId: 1-5 }
 
-try {
-    misRatings = JSON.parse(localStorage.getItem('bookrank_ratings') || '{}');
-} catch (e) {}
+try { misRatings = JSON.parse(localStorage.getItem('bookrank_ratings') || '{}'); } catch (e) {}
+try { misGenreRatings = JSON.parse(localStorage.getItem('bookrank_genre_ratings') || '{}'); } catch (e) {}
 
 const PAGE_SIZE    = 10;
 const SEARCH_LIMIT = 50;
 
 // ══════════════════════════════════════════════════════════
-// INIT — conectar eventos al cargar el DOM
+// INIT
 // ══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-    // Botón calcular
     document.getElementById('btn-calc').addEventListener('click', calcular);
 
-    // Sliders → actualizar etiquetas
     document.getElementById('input_libros').addEventListener('input', e => {
         document.getElementById('lbl_libros').textContent = e.target.value;
     });
@@ -28,12 +26,10 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('lbl_refs').textContent = e.target.value;
     });
 
-    // Tabs
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab, btn));
     });
 
-    // Buscador
     document.getElementById('search-input').addEventListener('input', e => {
         debouncedSearch(e.target.value);
     });
@@ -51,7 +47,7 @@ function switchTab(id, btn) {
 }
 
 // ══════════════════════════════════════════════════════════
-// CALCULAR
+// CALCULAR — envía también las valoraciones del usuario
 // ══════════════════════════════════════════════════════════
 async function calcular() {
     const btn     = document.getElementById('btn-calc');
@@ -62,12 +58,18 @@ async function calcular() {
     overlay.classList.add('show');
 
     try {
+        // Solo enviamos ratings con valor > 0
+        const ratingsParaEnviar = Object.fromEntries(
+            Object.entries(misRatings).filter(([, v]) => v > 0)
+        );
+
         const res = await fetch('http://localhost:8080', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 peso_libro:      parseFloat(document.getElementById('input_libros').value),
-                peso_referencia: parseFloat(document.getElementById('input_refs').value)
+                peso_referencia: parseFloat(document.getElementById('input_refs').value),
+                user_ratings:    ratingsParaEnviar   // ← nuevo
             })
         });
 
@@ -80,6 +82,7 @@ async function calcular() {
 
         renderPopular();
         renderPersonal();
+        renderMisGeneros();
         renderRecomendaciones();
         renderArbol(datosGlobales.arbol);
         btn.textContent = 'Actualizar';
@@ -97,28 +100,19 @@ async function calcular() {
 // ══════════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════════
-function esHoja(n) {
-    return !n.hijos || n.hijos.length === 0;
-}
+function esHoja(n) { return !n.hijos || n.hijos.length === 0; }
 
 function recogerHojas(nodo, acc, path) {
-    if (esHoja(nodo)) {
-        acc.push({ ...nodo, path: [...path] });
-        return;
-    }
+    if (esHoja(nodo)) { acc.push({ ...nodo, path: [...path] }); return; }
     (nodo.hijos || []).forEach(h => recogerHojas(h, acc, [...path, nodo.nombre]));
 }
 
-function pathStr(hoja) {
-    return (hoja.path || []).slice(-2).join(' › ');
-}
+function pathStr(hoja) { return (hoja.path || []).slice(-2).join(' › '); }
 
 function escHtml(s) {
     return String(s)
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;');
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
 }
 
 function highlight(text, q) {
@@ -127,9 +121,47 @@ function highlight(text, q) {
 }
 
 function renderStars(id, rating, cssClass) {
-    return [1, 2, 3, 4, 5].map(s =>
+    return [1,2,3,4,5].map(s =>
         `<span class="${cssClass} ${s <= rating ? 'lit' : ''}" data-star="${s}" data-id="${id}">★</span>`
     ).join('');
+}
+
+function buildNombreMap(nodo, acc = {}) {
+    if (nodo.id) acc[nodo.id] = nodo.nombre;
+    (nodo.hijos || []).forEach(h => buildNombreMap(h, acc));
+    return acc;
+}
+
+// ── Peso efectivo de un nodo ──────────────────────────────
+// Para hojas: mi valoración si existe, si no average_rating del dataset.
+// Para nodos intermedios: media de pesos efectivos de todas sus hojas.
+function pesoEfectivo(nodo) {
+    if (esHoja(nodo)) {
+        const myR = misRatings[nodo.id];
+        return myR > 0 ? myR : (nodo.average_rating || 0);
+    }
+    const hojas = [];
+    recogerHojas(nodo, hojas, []);
+    if (!hojas.length) return 0;
+    const suma = hojas.reduce((acc, h) => {
+        const myR = misRatings[h.id];
+        return acc + (myR > 0 ? myR : (h.average_rating || 0));
+    }, 0);
+    return suma / hojas.length;
+}
+
+// Devuelve true si el nodo o alguna de sus hojas tiene valoración personal
+function tieneValoracionPropia(nodo) {
+    if (esHoja(nodo)) return (misRatings[nodo.id] || 0) > 0;
+    const hojas = [];
+    recogerHojas(nodo, hojas, []);
+    return hojas.some(h => (misRatings[h.id] || 0) > 0);
+}
+
+function fmtPeso(val, esPropio) {
+    if (!val || val === 0) return '';
+    const estrella = esPropio ? '★' : '★';
+    return `<span class="peso-medio${esPropio ? ' peso-propio' : ''}">${estrella} (${val.toFixed(2)})</span>`;
 }
 
 // ══════════════════════════════════════════════════════════
@@ -144,7 +176,7 @@ function renderPopular() {
 }
 
 // ══════════════════════════════════════════════════════════
-// RENDER — PERSONAL
+// RENDER — PERSONAL (libros)
 // ══════════════════════════════════════════════════════════
 function renderPersonal() {
     if (!datosGlobales) return;
@@ -157,20 +189,68 @@ function renderPersonal() {
     }
 
     const hojaMap = Object.fromEntries(todasHojasFlat.map(h => [h.id, h]));
-
-    const scored = ratedIds
+    const scored  = ratedIds
         .filter(id => hojaMap[id])
         .map(id => ({ ...hojaMap[id], _s: misRatings[id] * hojaMap[id].valor }))
         .sort((a, b) => b._s - a._s);
 
     container.innerHTML = '';
-
     if (!scored.length) {
         container.innerHTML = `<div class="empty-state"><div class="icon">🔍</div><p>No encontrados en el dataset.</p></div>`;
         return;
     }
-
     scored.forEach((libro, i) => container.appendChild(mkCard(libro, i + 1, true, true)));
+}
+
+// ══════════════════════════════════════════════════════════
+// RENDER — MIS GÉNEROS VALORADOS
+// ══════════════════════════════════════════════════════════
+function renderMisGeneros() {
+    const container = document.getElementById('list-mis-generos');
+    if (!container) return;
+
+    const ratedIds = Object.keys(misGenreRatings).filter(id => misGenreRatings[id] > 0);
+
+    if (!ratedIds.length) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">📂</div><p>Valora géneros en el explorador<br>y aparecerán aquí.</p></div>`;
+        return;
+    }
+
+    const nodoMap = {};
+    function indexarNodos(nodo) {
+        if (nodo.id) nodoMap[nodo.id] = nodo;
+        (nodo.hijos || []).forEach(indexarNodos);
+    }
+    if (datosGlobales?.arbol) indexarNodos(datosGlobales.arbol);
+
+    container.innerHTML = '';
+    ratedIds
+        .sort((a, b) => (misGenreRatings[b] || 0) - (misGenreRatings[a] || 0))
+        .forEach(id => {
+            const nodo   = nodoMap[id];
+            const nombre = nodo?.nombre || id;
+            const rating = misGenreRatings[id] || 0;
+            const pm     = nodo ? pesoEfectivo(nodo) : 0;
+            const esPropio = nodo ? tieneValoracionPropia(nodo) : false;
+
+            const card = document.createElement('div');
+            card.className = 'book-card';
+            card.innerHTML = `
+                <div class="book-rank" style="font-size:1rem">📂</div>
+                <div class="book-info" style="flex:1">
+                    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                        <div class="book-title">${escHtml(nombre)}</div>
+                        ${pm ? fmtPeso(pm, esPropio) : ''}
+                    </div>
+                    <div class="genre-stars-row" data-genre-id="${id}">
+                        ${[1,2,3,4,5].map(s =>
+                            `<span class="genre-star${s <= rating ? ' lit' : ''}" data-star="${s}" data-genre-id="${id}">★</span>`
+                        ).join('')}
+                    </div>
+                </div>
+                <button class="btn-quitar" data-clear-genre="${id}" title="Quitar valoración">Quitar opinión</button>`;
+            container.appendChild(card);
+        });
 }
 
 // ══════════════════════════════════════════════════════════
@@ -186,11 +266,10 @@ function renderRecomendaciones() {
         return;
     }
 
-    const hojaMap  = Object.fromEntries(todasHojasFlat.map(h => [h.id, h]));
-    const ratedSet = new Set(ratedIds);
+    const hojaMap    = Object.fromEntries(todasHojasFlat.map(h => [h.id, h]));
+    const ratedSet   = new Set(ratedIds);
     const candidatos = {};
 
-    // Via similar_map si existe
     if (Object.keys(similarMap).length) {
         ratedIds.forEach(id => {
             const myR = misRatings[id] || 0;
@@ -201,7 +280,6 @@ function renderRecomendaciones() {
         });
     }
 
-    // Fallback: mismo género (último elemento del path)
     if (!Object.keys(candidatos).length) {
         const generoScore = {};
         ratedIds.forEach(id => {
@@ -225,12 +303,10 @@ function renderRecomendaciones() {
         .map(([id]) => hojaMap[id]);
 
     container.innerHTML = '';
-
     if (!recs.length) {
         container.innerHTML = `<div class="empty-state"><div class="icon">🔮</div><p>Valora más libros para<br>obtener recomendaciones.</p></div>`;
         return;
     }
-
     recs.forEach((libro, i) => container.appendChild(mkCardRec(libro, i + 1)));
 }
 
@@ -238,31 +314,38 @@ function renderRecomendaciones() {
 // TARJETAS
 // ══════════════════════════════════════════════════════════
 function mkCard(libro, rank, showGenre, showMyRating) {
-    const card   = document.createElement('div');
-    card.className   = 'book-card';
-    card.dataset.id  = libro.id;
+    const card  = document.createElement('div');
+    card.className  = 'book-card';
+    card.dataset.id = libro.id;
 
-    const rating  = misRatings[libro.id] || 0;
+    const myR     = misRatings[libro.id] || 0;
+    const pm      = myR > 0 ? myR : (libro.average_rating || 0);
+    const esPropio = myR > 0;
     const genHtml = showGenre ? `<span class="book-genre">${escHtml(pathStr(libro))}</span>` : '';
-    const myRatingHtml = (showMyRating && rating > 0)
-        ? `<div class="my-rating-label">Tu valoración: ${rating}/5</div>`
-        : '';
+    const myRatingHtml = (showMyRating && myR > 0)
+        ? `<div class="my-rating-label">Tu valoración: ${myR}/5</div>` : '';
+    const quitarBtn = showMyRating && myR > 0
+        ? `<button class="btn-quitar" data-clear-book="${libro.id}" title="Quitar valoración">Quitar opinión</button>` : '';
 
     card.innerHTML = `
         <div class="book-rank">${rank}</div>
-        <div class="book-info">
-            <div class="book-title">${escHtml(libro.nombre)}</div>
+        <div class="book-info" style="flex:1">
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <div class="book-title">${escHtml(libro.nombre)}</div>
+                ${pm ? fmtPeso(pm, esPropio) : ''}
+            </div>
             ${genHtml}
             <div class="stars-wrap" data-id="${libro.id}">
-                ${renderStars(libro.id, rating, 'star')}
+                ${renderStars(libro.id, myR, 'star')}
             </div>
             ${myRatingHtml}
-        </div>`;
+        </div>
+        ${quitarBtn}`;
+
     card.style.cursor = 'pointer';
-    card.addEventListener('click', (e) => {
-        if (!e.target.closest('[data-star]')) {
+    card.addEventListener('click', e => {
+        if (!e.target.closest('[data-star]') && !e.target.closest('.btn-quitar'))
             abrirPanelLibro(libro);
-        }
     });
     return card;
 }
@@ -272,29 +355,31 @@ function mkCardRec(libro, rank) {
     card.className  = 'book-card rec';
     card.dataset.id = libro.id;
 
-    const rating = misRatings[libro.id] || 0;
+    const myR    = misRatings[libro.id] || 0;
+    const pm     = myR > 0 ? myR : (libro.average_rating || 0);
+    const esPropio = myR > 0;
 
     card.innerHTML = `
         <div class="book-rank rec-icon">✦</div>
         <div class="book-info">
-            <div class="book-title">${escHtml(libro.nombre)}</div>
+            <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+                <div class="book-title">${escHtml(libro.nombre)}</div>
+                ${pm ? fmtPeso(pm, esPropio) : ''}
+            </div>
             <span class="book-genre">${escHtml(pathStr(libro))}</span>
             <div class="stars-wrap" data-id="${libro.id}">
-                ${renderStars(libro.id, rating, 'star')}
+                ${renderStars(libro.id, myR, 'star')}
             </div>
         </div>`;
-
     card.style.cursor = 'pointer';
-    card.addEventListener('click', (e) => {
-        if (!e.target.closest('[data-star]')) {
-            abrirPanelLibro(libro);
-        }
+    card.addEventListener('click', e => {
+        if (!e.target.closest('[data-star]')) abrirPanelLibro(libro);
     });
     return card;
 }
 
 // ══════════════════════════════════════════════════════════
-// RATING
+// RATING — LIBROS
 // ══════════════════════════════════════════════════════════
 function rateBook(id, stars) {
     misRatings[id] = (misRatings[id] === stars) ? 0 : stars;
@@ -302,27 +387,115 @@ function rateBook(id, stars) {
 
     const v = misRatings[id];
 
-    // Actualizar todas las instancias de estrellas en el DOM
-    document.querySelectorAll(`.stars-wrap[data-id="${id}"] .star`).forEach(s => {
-        s.classList.toggle('lit', parseInt(s.dataset.star) <= v);
-    });
-    document.querySelectorAll(`.leaf-stars-row[data-id="${id}"] .leaf-star`).forEach(s => {
-        s.classList.toggle('lit', parseInt(s.dataset.star) <= v);
-    });
-    document.querySelectorAll(`.sri-stars[data-id="${id}"] .sri-star`).forEach(s => {
-        s.classList.toggle('lit', parseInt(s.dataset.star) <= v);
-    });
+    // Actualizar estrellas en el DOM
+    document.querySelectorAll(`.stars-wrap[data-id="${id}"] .star`).forEach(s =>
+        s.classList.toggle('lit', parseInt(s.dataset.star) <= v));
+    document.querySelectorAll(`.leaf-stars-row[data-id="${id}"] .leaf-star`).forEach(s =>
+        s.classList.toggle('lit', parseInt(s.dataset.star) <= v));
+    document.querySelectorAll(`.sri-stars[data-id="${id}"] .sri-star`).forEach(s =>
+        s.classList.toggle('lit', parseInt(s.dataset.star) <= v));
+
+    // Actualizar el peso mostrado en el nodo hoja del árbol
+    actualizarPesoNodoArbol(id);
+
+    // Mostrar/ocultar botón ✕ en el árbol
+    actualizarBtnQuitarArbol(id, v);
 
     renderPersonal();
     renderRecomendaciones();
 }
 
-// Delegación de eventos para estrellas (en vez de onclick inline)
+// ══════════════════════════════════════════════════════════
+// RATING — GÉNEROS Y SUBGÉNEROS
+// ══════════════════════════════════════════════════════════
+function rateGenre(id, stars) {
+    misGenreRatings[id] = (misGenreRatings[id] === stars) ? 0 : stars;
+    try { localStorage.setItem('bookrank_genre_ratings', JSON.stringify(misGenreRatings)); } catch (e) {}
+
+    const v = misGenreRatings[id];
+    document.querySelectorAll(`.genre-stars-row[data-genre-id="${id}"] .genre-star`).forEach(s =>
+        s.classList.toggle('lit', parseInt(s.dataset.star) <= v));
+
+    renderMisGeneros();
+}
+
+// Actualiza el texto de peso del nodo hoja en el árbol cuando se valora un libro
+function actualizarPesoNodoArbol(bookId) {
+    const wrapper = document.querySelector(`#tree-container [data-id="${bookId}"]`);
+    if (!wrapper) return;
+    const hoja = todasHojasFlat.find(h => h.id === bookId);
+    if (!hoja) return;
+    const myR = misRatings[bookId] || 0;
+    const pm  = myR > 0 ? myR : (hoja.average_rating || 0);
+    const row = wrapper.querySelector('.node-row');
+    if (!row) return;
+    let pesoEl = row.querySelector('.node-peso');
+    if (!pesoEl) {
+        pesoEl = document.createElement('span');
+        row.appendChild(pesoEl);
+    }
+    pesoEl.className = `node-peso${myR > 0 ? ' peso-propio' : ''}`;
+    pesoEl.textContent = pm ? `★ (${pm.toFixed(2)})` : '';
+}
+
+// Muestra u oculta el botón ✕ junto al libro en el árbol
+function actualizarBtnQuitarArbol(bookId, rating) {
+    const wrapper = document.querySelector(`#tree-container [data-id="${bookId}"]`);
+    if (!wrapper) return;
+    const starsRow = wrapper.querySelector('.leaf-stars-row');
+    if (!starsRow) return;
+
+    let btnExistente = wrapper.querySelector('.btn-quitar-arbol');
+    if (rating > 0) {
+        if (!btnExistente) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-quitar btn-quitar-arbol';
+            btn.dataset.clearBook = bookId;
+            btn.title = 'Quitar valoración';
+            btn.textContent = 'Quitar opinión';
+            // Insertar después de la fila de estrellas
+            starsRow.parentNode.insertBefore(btn, starsRow.nextSibling);
+        }
+    } else {
+        btnExistente?.remove();
+    }
+}
+
+// ══════════════════════════════════════════════════════════
+// DELEGACIÓN DE CLICKS
+// ══════════════════════════════════════════════════════════
 document.addEventListener('click', e => {
-    const star = e.target.closest('[data-star][data-id]');
-    if (!star) return;
-    e.stopPropagation();
-    rateBook(star.dataset.id, parseInt(star.dataset.star));
+    const clearBook = e.target.closest('[data-clear-book]');
+    if (clearBook) {
+        e.stopPropagation();
+        // Poner a 0: llamar con el valor actual (toggle a 0 en rateBook)
+        const id = clearBook.dataset.clearBook;
+        misRatings[id] = misRatings[id] || 1; // garantiza que toggle lo lleve a 0
+        rateBook(id, misRatings[id]);
+        return;
+    }
+
+    const clearGenre = e.target.closest('[data-clear-genre]');
+    if (clearGenre) {
+        e.stopPropagation();
+        const id = clearGenre.dataset.clearGenre;
+        misGenreRatings[id] = misGenreRatings[id] || 1;
+        rateGenre(id, misGenreRatings[id]);
+        return;
+    }
+
+    const starLibro = e.target.closest('[data-star][data-id]:not([data-genre-id])');
+    if (starLibro) {
+        e.stopPropagation();
+        rateBook(starLibro.dataset.id, parseInt(starLibro.dataset.star));
+        return;
+    }
+
+    const starGenero = e.target.closest('[data-star][data-genre-id]');
+    if (starGenero) {
+        e.stopPropagation();
+        rateGenre(starGenero.dataset.genreId, parseInt(starGenero.dataset.star));
+    }
 });
 
 // ══════════════════════════════════════════════════════════
@@ -332,14 +505,12 @@ function renderArbol(arbol) {
     const container = document.getElementById('tree-container');
     container.innerHTML = '';
     container.appendChild(mkNodo(arbol, 0));
-
-    // Expandir la raíz automáticamente
     const firstRow = container.querySelector('.node-row');
     if (firstRow) firstRow.click();
 }
 
 function mkNodo(nodo, depth) {
-    const wrapper    = document.createElement('div');
+    const wrapper = document.createElement('div');
     wrapper.dataset.id = nodo.id;
 
     const hijos      = [...(nodo.hijos || [])].sort((a, b) => b.valor - a.valor);
@@ -349,37 +520,36 @@ function mkNodo(nodo, depth) {
     row.className = 'node-row' + (tieneHijos ? '' : ' leaf');
     row.style.paddingLeft = (8 + depth * 4) + 'px';
 
-    const icon = tieneHijos
-        ? (depth === 0 ? '📚' : '📂') : '📖';
+    const icon = tieneHijos ? (depth === 0 ? '📚' : '📂') : '📖';
+    const pm   = pesoEfectivo(nodo);
+    const esPropio = tieneValoracionPropia(nodo);
 
     row.innerHTML = `
         <span class="arrow">▶</span>
         <span class="node-icon">${icon}</span>
-        <span class="node-label">${escHtml(nodo.nombre)}</span>`;
+        <span class="node-label">${escHtml(nodo.nombre)}</span>
+        ${pm ? `<span class="node-peso${esPropio ? ' peso-propio' : ''}">★ (${pm.toFixed(2)})</span>` : ''}`;
 
     wrapper.appendChild(row);
 
     if (tieneHijos) {
+        wrapper.appendChild(mkGenreStars(nodo.id));
+
         const children = document.createElement('div');
         children.className = 'node-children';
 
         let loaded = false;
         let shown  = 0;
 
-        // Subcarpetas primero, luego hojas (paginadas)
         const subCarpetas = hijos.filter(h => h.hijos?.length > 0);
         const hojas       = hijos.filter(h => !h.hijos?.length);
         const ordenado    = [...subCarpetas, ...hojas];
 
         function mostrarMas() {
             const hasta = Math.min(shown + PAGE_SIZE, ordenado.length);
-            for (let i = shown; i < hasta; i++) {
-                children.appendChild(mkNodo(ordenado[i], depth + 1));
-            }
+            for (let i = shown; i < hasta; i++) children.appendChild(mkNodo(ordenado[i], depth + 1));
             shown = hasta;
-
             children.querySelector('.ver-mas-btn')?.remove();
-
             if (shown < ordenado.length) {
                 const restantes = ordenado.length - shown;
                 const btn = document.createElement('div');
@@ -400,38 +570,61 @@ function mkNodo(nodo, depth) {
         wrapper.appendChild(children);
 
     } else {
+        // Hoja: estrellas + botón ✕ si ya está valorado
         wrapper.appendChild(mkLeafStars(nodo.id));
-        
-        // Annadimos cursor pointer para indicar que es clickeable
-        row.style.cursor = 'pointer'; 
-        
+
+        const myR = misRatings[nodo.id] || 0;
+        if (myR > 0) {
+            const btn = document.createElement('button');
+            btn.className = 'btn-quitar btn-quitar-arbol';
+            btn.dataset.clearBook = nodo.id;
+            btn.title = 'Quitar valoración';
+            btn.textContent = 'Quitar opinión';
+            wrapper.appendChild(btn);
+        }
+
+        row.style.cursor = 'pointer';
         row.addEventListener('click', e => {
             e.stopPropagation();
-            // Evitamos abrir el panel si el usuario hizo clic en una estrella para valorar
-            if (!e.target.closest('[data-star]')) {
+            if (!e.target.closest('[data-star]') && !e.target.closest('.btn-quitar'))
                 abrirPanelLibro(nodo);
-            }
         });
     }
 
     return wrapper;
 }
 
+// Estrellas hoja (libro)
 function mkLeafStars(id) {
-    const div   = document.createElement('div');
-    div.className   = 'leaf-stars-row';
-    div.dataset.id  = id;
-
+    const div = document.createElement('div');
+    div.className  = 'leaf-stars-row';
+    div.dataset.id = id;
     const v = misRatings[id] || 0;
-    [1, 2, 3, 4, 5].forEach(s => {
+    [1,2,3,4,5].forEach(s => {
         const star = document.createElement('span');
-        star.className   = 'leaf-star' + (s <= v ? ' lit' : '');
-        star.textContent = '★';
+        star.className    = 'leaf-star' + (s <= v ? ' lit' : '');
+        star.textContent  = '★';
         star.dataset.star = s;
         star.dataset.id   = id;
         div.appendChild(star);
     });
+    return div;
+}
 
+// Estrellas nodo intermedio (género)
+function mkGenreStars(id) {
+    const div = document.createElement('div');
+    div.className = 'genre-stars-row';
+    div.dataset.genreId = id;
+    const v = misGenreRatings[id] || 0;
+    [1,2,3,4,5].forEach(s => {
+        const star = document.createElement('span');
+        star.className       = 'genre-star' + (s <= v ? ' lit' : '');
+        star.textContent     = '★';
+        star.dataset.star    = s;
+        star.dataset.genreId = id;
+        div.appendChild(star);
+    });
     return div;
 }
 
@@ -441,35 +634,29 @@ function mkLeafStars(id) {
 let _searchTimer = null;
 
 function debouncedSearch(value) {
-    const clearBtn   = document.getElementById('search-clear');
-    const treeEl     = document.getElementById('tree-container');
-    const resultsEl  = document.getElementById('search-results-container');
+    const clearBtn  = document.getElementById('search-clear');
+    const treeEl    = document.getElementById('tree-container');
+    const resultsEl = document.getElementById('search-results-container');
     const q = value.trim();
-
     clearTimeout(_searchTimer);
-
     if (!q) {
         clearBtn.classList.remove('visible');
         treeEl.style.display    = '';
         resultsEl.style.display = 'none';
         return;
     }
-
     clearBtn.classList.add('visible');
     treeEl.style.display    = 'none';
     resultsEl.style.display = '';
-
     _searchTimer = setTimeout(() => onSearch(value), 250);
 }
 
 function onSearch(value) {
-    const q     = value.trim().toLowerCase();
+    const q      = value.trim().toLowerCase();
     const listEl = document.getElementById('search-results-list');
-
     if (!q || !datosGlobales) return;
     listEl.innerHTML = '';
 
-    // Categorías coincidentes
     const cats = [];
     function buscarCats(nodo, path) {
         if (esHoja(nodo)) return;
@@ -479,7 +666,6 @@ function onSearch(value) {
     }
     buscarCats(datosGlobales.arbol, []);
 
-    // Hojas coincidentes (ya ordenadas, limitadas)
     const hojasFilt = todasHojasFlat
         .filter(h => h.nombre.toLowerCase().includes(q))
         .slice(0, SEARCH_LIMIT);
@@ -492,30 +678,45 @@ function onSearch(value) {
     const frag = document.createDocumentFragment();
 
     cats.forEach(cat => {
-        const item = document.createElement('div');
+        const gRating  = misGenreRatings[cat.id] || 0;
+        const pm       = pesoEfectivo(cat);
+        const esPropio = tieneValoracionPropia(cat);
+        const item     = document.createElement('div');
         item.className = 'search-result-item';
-        item.innerHTML = `<span class="sri-icon">📂</span><span class="sri-label">${highlight(cat.nombre, q)}</span>`;
+        item.innerHTML = `
+            <span class="sri-icon">📂</span>
+            <span class="sri-label">
+                ${highlight(cat.nombre, q)}
+                ${pm ? fmtPeso(pm, esPropio) : ''}
+            </span>
+            <div class="genre-stars-row" data-genre-id="${cat.id}" style="display:flex;gap:1px;flex-shrink:0">
+                ${[1,2,3,4,5].map(s =>
+                    `<span class="genre-star${s <= gRating ? ' lit' : ''}" data-star="${s}" data-genre-id="${cat.id}">★</span>`
+                ).join('')}
+            </div>`;
         frag.appendChild(item);
     });
 
     hojasFilt.forEach(libro => {
-        const rating = misRatings[libro.id] || 0;
+        const myR    = misRatings[libro.id] || 0;
+        const pm     = myR > 0 ? myR : (libro.average_rating || 0);
+        const esPropio = myR > 0;
         const item   = document.createElement('div');
         item.className = 'search-result-item';
         item.innerHTML = `
             <span class="sri-icon">📖</span>
             <span class="sri-label">
-                ${highlight(libro.nombre, q)}<br>
+                ${highlight(libro.nombre, q)}
+                ${pm ? fmtPeso(pm, esPropio) : ''}<br>
                 <span style="font-size:0.7rem;color:var(--muted)">${escHtml(pathStr(libro))}</span>
             </span>
             <div class="sri-stars" data-id="${libro.id}">
-                ${renderStars(libro.id, rating, 'sri-star')}
+                ${renderStars(libro.id, myR, 'sri-star')}
             </div>`;
         item.style.cursor = 'pointer';
-        item.addEventListener('click', (e) => {
-            if (!e.target.closest('[data-star]')) {
+        item.addEventListener('click', e => {
+            if (!e.target.closest('[data-star]') && !e.target.closest('[data-genre-id]'))
                 abrirPanelLibro(libro);
-            }
         });
         frag.appendChild(item);
     });
@@ -539,20 +740,16 @@ function limpiarBusqueda() {
 }
 
 // ══════════════════════════════════════════════════════════
-// PANEL LATERAL
+// PANEL DETALLE LIBRO
 // ══════════════════════════════════════════════════════════
 function abrirPanelLibro(libro) {
-
-    const panelContenedor = document.querySelector('.left-panel'); 
+    const panelContenedor = document.querySelector('.left-panel');
     if (!panelContenedor) return;
-
-    // Si ya había un panel de un libro abierto, lo eliminamos para que no se acumulen
     const panelAnterior = panelContenedor.querySelector('.book-detail-panel');
     if (panelAnterior) panelAnterior.remove();
 
-    // Preparar los datos
     const titulo      = libro.title || libro.nombre || 'Título desconocido';
-    const autores     = libro.authors ? libro.authors : 'Autor desconocido';
+    const autores     = libro.authors || 'Autor desconocido';
     const descripcion = libro.descripcion || 'No hay sinopsis disponible para este libro.';
     const genero      = libro.genero || (libro.path ? pathStr(libro) : 'Sin categoría');
     const rating      = libro.average_rating ? `${libro.average_rating} / 5` : 'N/A';
@@ -562,32 +759,22 @@ function abrirPanelLibro(libro) {
     const editorial   = libro.publisher || 'N/A';
     const isbn        = libro.isbn || 'N/A';
 
-    // Crear tercera ventana flotante
     const infoDiv = document.createElement('div');
     infoDiv.className = 'book-detail-panel';
-
-    console.log('Libro seleccionado:', libro);
-    
     infoDiv.innerHTML = `
         <div class="detalles-libro">
             <div class="info-header">
                 <h2 class="info-titulo">${escHtml(titulo)}</h2>
                 <button id="btn-cerrar-info" class="btn-cerrar-simple">✕</button>
             </div>
-            <!--
-            <p class="info-autores"><strong>${escHtml(autores)}</strong></p>
-            -->
-            
             <div class="info-badges">
                 <span class="badge badge-genero">🏷️ ${escHtml(genero)}</span>
                 <span class="badge badge-rating">⭐ ${escHtml(rating)} <small>${escHtml(votos)}</small></span>
             </div>
-
             <div class="info-sinopsis">
                 <h3>Sinopsis</h3>
                 <p>${escHtml(descripcion)}</p>
             </div>
-
             <div class="info-metadata">
                 <div><strong>Páginas:</strong> ${escHtml(paginas)}</div>
                 <div><strong>Año:</strong> ${escHtml(anio)}</div>
@@ -595,20 +782,12 @@ function abrirPanelLibro(libro) {
                 <div><strong>ISBN:</strong> ${escHtml(isbn)}</div>
             </div>
         </div>
-        
-        ${libro.tiene_similar && libro.similar_books && libro.similar_books.length > 0 ? `
+        ${libro.tiene_similar && libro.similar_books?.length ? `
             <div class="info-similares">
-                <strong>Libros similares recomendados (IDs):</strong> 
+                <strong>Libros similares (IDs):</strong>
                 ${escHtml(libro.similar_books.join(', '))}
-            </div>
-        ` : ''}
-    `;
+            </div>` : ''}`;
 
-    // Poner en panel izquierdo
     panelContenedor.appendChild(infoDiv);
-
-    // Acción del botón X: destruye el div
-    document.getElementById('btn-cerrar-info').addEventListener('click', () => {
-        infoDiv.remove();
-    });
+    document.getElementById('btn-cerrar-info').addEventListener('click', () => infoDiv.remove());
 }

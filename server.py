@@ -6,23 +6,20 @@ import logica
 DATASET = "dataset_limpio.json"
 
 def obtener_estructura_arbol(G, nodo_actual, valores):
-    atributos = G.nodes[nodo_actual]
-
+    atributos    = G.nodes[nodo_actual]
     nivel_actual = atributos.get('nivel', 0)
-    hijos = [v for v in G.neighbors(nodo_actual) if G.nodes[v].get('nivel', 0) > nivel_actual]
+    hijos        = [v for v in G.neighbors(nodo_actual)
+                    if G.nodes[v].get('nivel', 0) > nivel_actual]
 
-    # Usar nombre legible si existe, si no usar ID
     nombre = atributos.get('display', nodo_actual)
 
-    # Construimos el diccionario base (carpetas y libros lo tienen)
     nodo_dict = {
         "nombre": nombre,
         "id":     nodo_actual,
         "valor":  round(valores.get(nodo_actual, 0), 6),
         "hijos":  [obtener_estructura_arbol(G, h, valores) for h in sorted(hijos)]
     }
-    
-    # Si es un nodo hoja le inyectamos toda la información extra que viene de lector.py
+
     if len(hijos) == 0:
         nodo_dict["title"]            = atributos.get("title")
         nodo_dict["authors"]          = atributos.get("authors")
@@ -48,15 +45,22 @@ def iniciar_servidor():
     server.listen(1)
     print(f"🚀 Servidor listo en http://{HOST}:{PORT}")
 
-    # Precargamos el grafo y los likes una sola vez
     print(f"Cargando dataset {DATASET}...")
     G, referencias = lector.leer_entrada(DATASET)
-    ratings_data = lector.leer_likes(DATASET)
+    ratings_data   = lector.leer_likes(DATASET)
     print("Dataset cargado.")
 
     while True:
         conn, addr = server.accept()
-        peticion = conn.recv(2048).decode('utf-8')
+
+        # Leer petición completa (puede ser grande si hay muchos ratings)
+        datos = b''
+        while True:
+            chunk = conn.recv(4096)
+            datos += chunk
+            if len(chunk) < 4096:
+                break
+        peticion = datos.decode('utf-8')
 
         if peticion:
             if peticion.startswith('OPTIONS'):
@@ -70,30 +74,37 @@ def iniciar_servidor():
                 continue
 
             try:
-                partes = peticion.split('\r\n\r\n')
+                partes = peticion.split('\r\n\r\n', 1)
                 if len(partes) > 1:
-                    body_data = json.loads(partes[1])
-                    p_libro = body_data.get('peso_libro', 3.0)
-                    p_ref   = body_data.get('peso_referencia', 3.0)
+                    body_data    = json.loads(partes[1])
+                    p_libro      = body_data.get('peso_libro', 3.0)
+                    p_ref        = body_data.get('peso_referencia', 3.0)
+                    # Valoraciones personales del usuario { book_id: 1-5 }
+                    user_ratings = body_data.get('user_ratings', {})
                 else:
                     p_libro, p_ref = 3.0, 3.0
+                    user_ratings   = {}
 
-                print(f"Calculando PageRank (peso_libro={p_libro}, peso_ref={p_ref})...")
-                valores = logica.version_personalizacion_likes(G, ratings_data, referencias, p_libro, p_ref)
+                print(f"Calculando PageRank (peso_libro={p_libro}, peso_ref={p_ref}, "
+                      f"libros valorados por usuario={len(user_ratings)})...")
 
-                # Tabla global ordenada por valor
+                valores = logica.version_personalizacion_likes(
+                    G, ratings_data, referencias,
+                    p_libro, p_ref,
+                    user_ratings=user_ratings
+                )
+
                 nodos_data = [
                     {"nombre": G.nodes[n].get('display', n), "id": n, "valor": round(v, 6)}
                     for n, v in valores.items()
                 ]
 
-                # Árbol jerárquico
                 raices = [n for n, attr in G.nodes(data=True) if attr.get('nivel') == 0]
-                raiz = raices[0] if raices else None
-                arbol = obtener_estructura_arbol(G, raiz, valores) if raiz else {}
+                raiz   = raices[0] if raices else None
+                arbol  = obtener_estructura_arbol(G, raiz, valores) if raiz else {}
 
                 respuesta_final = {"tabla": nodos_data, "arbol": arbol}
-                cuerpo_json = json.dumps(respuesta_final)
+                cuerpo_json     = json.dumps(respuesta_final)
 
                 respuesta_http = (
                     "HTTP/1.1 200 OK\r\n"
@@ -106,7 +117,9 @@ def iniciar_servidor():
                 conn.sendall(respuesta_http.encode('utf-8'))
 
             except Exception as e:
+                import traceback
                 print(f"Error: {e}")
+                traceback.print_exc()
 
         conn.close()
 
