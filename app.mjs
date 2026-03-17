@@ -750,17 +750,19 @@ function limpiarBusqueda() {
 // PANEL DETALLE LIBRO
 // ══════════════════════════════════════════════════════════
 function abrirPanelLibro(libro) {
-    // En modo debug el panel de detalle se ancla sobre el debug-panel;
-    // en modo normal, sobre el left-panel habitual
-    const panelContenedor = modoDebug
-        ? document.getElementById('debug-panel')
+    // En modo debug el panel de detalle se ancla sobre el debug-panel
+    // En modo normal, sobre el left-panel habitual
+    const panelContenedor = typeof modoDebug !== 'undefined' && modoDebug 
+        ? document.getElementById('debug-panel') 
         : document.querySelector('.left-panel');
+        
     if (!panelContenedor) return;
+    
     const panelAnterior = panelContenedor.querySelector('.book-detail-panel');
     if (panelAnterior) panelAnterior.remove();
 
     const titulo      = libro.title || libro.nombre || 'Título desconocido';
-    const autores     = libro.authors || 'Autor desconocido';
+    const autores     = libro.authors || 'Autor desconocido'; //no se usa de momento porque autores no está en el dataset
     const descripcion = libro.descripcion || 'No hay sinopsis disponible para este libro.';
     const genero      = libro.genero || (libro.path ? pathStr(libro) : 'Sin categoría');
     const rating      = libro.average_rating ? `${libro.average_rating} / 5` : 'N/A';
@@ -769,6 +771,30 @@ function abrirPanelLibro(libro) {
     const anio        = libro.publication_year || 'N/A';
     const editorial   = libro.publisher || 'N/A';
     const isbn        = libro.isbn || 'N/A';
+
+    // Mapeo de id a titulos
+    let htmlSimilares = '';
+    if (libro.tiene_similar && libro.similar_books?.length) {
+        const nombresSimilares = libro.similar_books.map(idSimilar => {
+            const libroEncontrado = todasHojasFlat.find(h => h.id === idSimilar);
+            // Si lo encuentra devuelve el nombre
+            if (libroEncontrado) {
+                return libroEncontrado.nombre || libroEncontrado.title;
+            }
+            else return null;
+        }).filter(nombre => nombre !== null);
+
+        // Aplicamos escHtml a cada nombre individualmente y unimos con salto de línea
+        if (nombresSimilares.length > 0) {
+        htmlSimilares = `
+            <div class="info-similares"">
+                <strong>Libros similares recomendados:</strong><br>
+                <p>
+                ${nombresSimilares.map(nombre => escHtml(nombre)).join('<br>')}
+                </p>
+            </div>`;
+        }
+    }
 
     const infoDiv = document.createElement('div');
     infoDiv.className = 'book-detail-panel';
@@ -793,11 +819,8 @@ function abrirPanelLibro(libro) {
                 <div><strong>ISBN:</strong> ${escHtml(isbn)}</div>
             </div>
         </div>
-        ${libro.tiene_similar && libro.similar_books?.length ? `
-            <div class="info-similares">
-                <strong>Libros similares (IDs):</strong>
-                ${escHtml(libro.similar_books.join(', '))}
-            </div>` : ''}`;
+        ${htmlSimilares}
+    `;
 
     panelContenedor.appendChild(infoDiv);
     document.getElementById('btn-cerrar-info').addEventListener('click', () => infoDiv.remove());

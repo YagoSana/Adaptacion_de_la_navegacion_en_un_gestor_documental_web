@@ -785,6 +785,11 @@ header h1 span {
     margin-bottom: 10px;
 }
 
+.info-similares p{
+    padding: 12px 16px;
+    border-radius: 8px;
+}
+
 .btn-cerrar-simple {
     background: transparent;
     border: none;
