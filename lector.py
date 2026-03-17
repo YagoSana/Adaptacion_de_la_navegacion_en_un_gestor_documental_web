@@ -76,7 +76,7 @@ def leer_entrada(ruta_json):
     with open(ruta_json, 'r', encoding='utf-8') as f:
         libros = json.load(f)
 
-    # ── Deduplicación paso A: por book_id ─────────────────────────────────────
+    # Deduplicación paso A: por book_id
     por_id = {}
     for libro in libros:
         bid = libro.get("book_id")
@@ -86,7 +86,7 @@ def leer_entrada(ruta_json):
         if bid not in por_id or rc_nuevo > int(por_id[bid].get("ratings_count") or 0):
             por_id[bid] = libro
 
-    # ── Deduplicación paso B: por título normalizado ───────────────────────────
+    # Deduplicación paso B: por título normalizado
     import unicodedata, re
 
     def normalizar_titulo(t):
@@ -130,7 +130,7 @@ def leer_entrada(ruta_json):
     print(f"[lector] Duplicados por título eliminados:   {dup_titulo}")
     print(f"[lector] Libros únicos tras deduplicación:   {len(libros_unicos)}")
 
-    # ── Límite por subcategoría ────────────────────────────────────────────────
+    # Límite por subcategoría
     libros_por_subcat = {}
     for libro in libros_unicos:
         genero = libro.get("genero")
@@ -152,7 +152,6 @@ def leer_entrada(ruta_json):
 
     libros_unicos = [l for l in libros_unicos if l.get("book_id") in ids_permitidos]
     print(f"[lector] Total libros tras límite por subcategoría: {len(libros_unicos)}")
-    # ──────────────────────────────────────────────────────────────────────────
 
     # Índice book_id → libro (incluye redirecciones)
     indice = {l["book_id"]: l for l in libros_unicos}

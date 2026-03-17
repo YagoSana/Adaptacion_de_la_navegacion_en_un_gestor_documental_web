@@ -3,9 +3,7 @@ import gzip
 import re
 from collections import defaultdict
 
-# ============================================================
 # MAPEO: shelves del dataset -> categorías del árbol
-# ============================================================
 MAPEO_GENEROS = {
     # Historical fiction
     "historical-fiction":       "Historical fiction",

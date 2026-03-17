@@ -56,7 +56,7 @@ def version_personalizacion_likes(
     if user_ratings is None:
         user_ratings = {}
 
-    # --- Aplicar valoraciones del usuario sobre ratings_data ---------------
+    # Aplicar valoraciones del usuario sobre ratings_data
     # Hacemos una copia para no mutar el original (que se reutiliza entre peticiones)
     ratings_data_efectivo = {}
     for book_id, d in ratings_data.items():
@@ -69,15 +69,15 @@ def version_personalizacion_likes(
         else:
             ratings_data_efectivo[book_id] = d
 
-    # --- Score bayesiano por libro -----------------------------------------
+    # Score bayesiano por libro 
     bayesian = _bayesian_scores(ratings_data_efectivo, percentil_m)
 
-    # --- Identificar nodos hoja (libros) ------------------------------------
+    # Identificar nodos hoja (libros) 
     niveles    = [G.nodes[n].get('nivel', 0) for n in G.nodes()]
     max_nivel  = max(niveles) if niveles else 0
     nodos_hoja = {n for n in G.nodes() if G.nodes[n].get('nivel', 0) == max_nivel}
 
-    # --- Grafo bidireccional con pesos -------------------------------------
+    # Grafo bidireccional con pesos
     G_completo = nx.DiGraph()
     G_completo.add_nodes_from(G.nodes(data=True))
 
@@ -94,7 +94,7 @@ def version_personalizacion_likes(
             G_completo.add_edge(u, v, weight=peso_ref)
             G_completo.add_edge(v, u, weight=peso_ref)
 
-    # --- Vector de personalización -----------------------------------------
+    # Vector de personalización 
     personalization = {}
     for nodo in G_completo.nodes():
         if nodo in bayesian:
