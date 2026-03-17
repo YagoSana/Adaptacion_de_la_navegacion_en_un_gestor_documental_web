@@ -19,13 +19,6 @@ const SEARCH_LIMIT = 50;
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-calc').addEventListener('click', calcular);
 
-    document.getElementById('input_libros').addEventListener('input', e => {
-        document.getElementById('lbl_libros').textContent = e.target.value;
-    });
-    document.getElementById('input_refs').addEventListener('input', e => {
-        document.getElementById('lbl_refs').textContent = e.target.value;
-    });
-
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab, btn));
     });
@@ -67,8 +60,8 @@ async function calcular() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                peso_libro:      parseFloat(document.getElementById('input_libros').value),
-                peso_referencia: parseFloat(document.getElementById('input_refs').value),
+                peso_libro:      3,
+                peso_referencia: 3,
                 user_ratings:    ratingsParaEnviar   // ← nuevo
             })
         });
