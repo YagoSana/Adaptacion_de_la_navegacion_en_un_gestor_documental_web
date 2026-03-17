@@ -794,3 +794,118 @@ header h1 span {
     color: #333;
     padding: 0 0 0 10px;
 }
+.btn-debug {
+    background: transparent;
+    color: #aaa;
+    border: 1.5px solid #555;
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-weight: 600;
+    font-size: 0.82rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-debug:hover {
+    border-color: #f0c040;
+    color: #f0c040;
+}
+
+.btn-debug.active {
+    background: #f0c040;
+    border-color: #f0c040;
+    color: var(--ink);
+}
+
+.debug-panel {
+    flex: 1;
+    flex-direction: column;
+    overflow: hidden;
+    background: #0e0e1a;
+    color: #d0d0e8;
+    min-height: calc(100vh - 66px);
+    position: relative;
+}
+
+.debug-header {
+    padding: 18px 28px 14px;
+    border-bottom: 1px solid #2a2a44;
+    flex-shrink: 0;
+}
+
+.debug-header h2 {
+    font-size: 1rem;
+    color: #f0c040;
+    margin-bottom: 6px;
+}
+
+.debug-sub {
+    font-size: 0.8rem;
+    color: #888;
+    line-height: 1.5;
+}
+
+.debug-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 10px 16px 28px;
+}
+
+.debug-panel .node-row {
+    color: #c8c8e8;
+}
+
+.debug-panel .node-row:hover {
+    background: #1c1c30;
+}
+
+.debug-panel .node-children {
+    border-left-color: #2a2a44;
+}
+
+.debug-panel .node-label {
+    color: #c8c8e8;
+}
+
+.debug-panel .node-row.leaf .node-label {
+    color: #a0a0c0;
+}
+
+.debug-panel .arrow {
+    color: #555;
+}
+
+.debug-panel .ver-mas-btn {
+    color: #888;
+}
+
+.debug-panel .ver-mas-btn:hover {
+    background: #1c1c30;
+    color: #ccc;
+}
+
+.dbg-pr {
+    font-size: 0.68rem;
+    font-family: 'Courier New', monospace;
+    color: #f0c040;
+    background: #1a1a08;
+    border: 1px solid #3a3a10;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.dbg-avg {
+    font-size: 0.68rem;
+    color: #80c080;
+    background: #0a1a0a;
+    border: 1px solid #1a3a1a;
+    border-radius: 4px;
+    padding: 1px 6px;
+    margin-left: 4px;
+    flex-shrink: 0;
+    white-space: nowrap;
+}

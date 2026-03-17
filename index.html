@@ -21,11 +21,13 @@
     <header>
         <h1>Book<span>Rank</span></h1>
         <div class="header-controls">
+            <button class="btn-debug" id="btn-debug">🐛 Debug</button>
             <button class="btn-calc" id="btn-calc">Calcular</button>
         </div>
     </header>
 
-    <div class="main">
+    <!-- Vista principal (oculta en modo debug) -->
+    <div class="main" id="main-panels">
 
         <!-- Panel derecho -->
         <div class="right-panel">
@@ -102,6 +104,22 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Panel debug (visible solo en modo debug) -->
+    <div id="debug-panel" class="debug-panel" style="display:none">
+        <div class="debug-header">
+            <h2>🐛 Modo Debug — PageRank por nodo</h2>
+            <p class="debug-sub">Árbol limitado a <strong>10 libros por subcategoría</strong> (mayor <em>average_rating</em>). El número junto a cada nodo es su valor de PageRank.</p>
+        </div>
+        <div class="debug-body">
+            <div id="debug-tree-container">
+                <div class="empty-state" style="padding:40px 10px">
+                    <div class="icon">🐛</div>
+                    <p>Pulsa <strong>Calcular</strong> y activa Debug<br>para ver los valores de PageRank.</p>
+                </div>
+            </div>
+        </div>
     </div>
 
     <script type="module" src="app.mjs"></script>

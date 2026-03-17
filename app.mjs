@@ -1,3 +1,6 @@
+import { esHoja, recogerHojas, escHtml, highlight, renderStars, pathStr } from './utils.mjs';
+import { renderArbolDebug, actualizarEstrellaDebugLibro, actualizarEstrellaDebugGenero } from './debug.mjs';
+
 // ══════════════════════════════════════════════════════════
 // ESTADO GLOBAL
 // ══════════════════════════════════════════════════════════
@@ -6,6 +9,7 @@ let todasHojasFlat  = [];
 let similarMap      = {};
 let misRatings      = {};  // { book_id: 1-5 }
 let misGenreRatings = {};  // { nodeId: 1-5 }
+let modoDebug       = false;
 
 try { misRatings = JSON.parse(localStorage.getItem('bookrank_ratings') || '{}'); } catch (e) {}
 try { misGenreRatings = JSON.parse(localStorage.getItem('bookrank_genre_ratings') || '{}'); } catch (e) {}
@@ -27,7 +31,35 @@ document.addEventListener('DOMContentLoaded', () => {
         debouncedSearch(e.target.value);
     });
     document.getElementById('search-clear').addEventListener('click', limpiarBusqueda);
+    document.getElementById('btn-debug').addEventListener('click', toggleDebug);
 });
+
+// ══════════════════════════════════════════════════════════
+// MODO DEBUG
+// ══════════════════════════════════════════════════════════
+
+// Empaqueta las funciones de estado que debug.mjs necesita para ser interactivo
+function mkDebugCallbacks() {
+    return {
+        misRatings,
+        misGenreRatings,
+        pesoEfectivo,
+        tieneValoracionPropia,
+        rateBook,
+        rateGenre,
+        abrirPanelLibro,
+    };
+}
+
+function toggleDebug() {
+    modoDebug = !modoDebug;
+    const btn = document.getElementById('btn-debug');
+    btn.classList.toggle('active', modoDebug);
+    btn.textContent = modoDebug ? '🐛 Debug ON' : '🐛 Debug';
+    document.getElementById('debug-panel').style.display   = modoDebug ? 'flex' : 'none';
+    document.getElementById('main-panels').style.display   = modoDebug ? 'none' : 'grid';
+    if (modoDebug && datosGlobales) renderArbolDebug(datosGlobales.arbol, mkDebugCallbacks());
+}
 
 // ══════════════════════════════════════════════════════════
 // TABS
@@ -78,6 +110,7 @@ async function calcular() {
         renderMisGeneros();
         renderRecomendaciones();
         renderArbol(datosGlobales.arbol);
+        if (modoDebug) renderArbolDebug(datosGlobales.arbol, mkDebugCallbacks());
         btn.textContent = 'Actualizar';
 
     } catch (err) {
@@ -93,31 +126,6 @@ async function calcular() {
 // ══════════════════════════════════════════════════════════
 // HELPERS
 // ══════════════════════════════════════════════════════════
-function esHoja(n) { return !n.hijos || n.hijos.length === 0; }
-
-function recogerHojas(nodo, acc, path) {
-    if (esHoja(nodo)) { acc.push({ ...nodo, path: [...path] }); return; }
-    (nodo.hijos || []).forEach(h => recogerHojas(h, acc, [...path, nodo.nombre]));
-}
-
-function pathStr(hoja) { return (hoja.path || []).slice(-2).join(' › '); }
-
-function escHtml(s) {
-    return String(s)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function highlight(text, q) {
-    const safeQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    return escHtml(text).replace(new RegExp(`(${safeQ})`, 'gi'), '<span class="highlight">$1</span>');
-}
-
-function renderStars(id, rating, cssClass) {
-    return [1,2,3,4,5].map(s =>
-        `<span class="${cssClass} ${s <= rating ? 'lit' : ''}" data-star="${s}" data-id="${id}">★</span>`
-    ).join('');
-}
 
 function buildNombreMap(nodo, acc = {}) {
     if (nodo.id) acc[nodo.id] = nodo.nombre;
@@ -394,6 +402,9 @@ function rateBook(id, stars) {
     // Mostrar/ocultar botón ✕ en el árbol
     actualizarBtnQuitarArbol(id, v);
 
+    // Sincronizar árbol debug si está activo
+    if (modoDebug) actualizarEstrellaDebugLibro(id, v);
+
     renderPersonal();
     renderRecomendaciones();
 }
@@ -408,6 +419,9 @@ function rateGenre(id, stars) {
     const v = misGenreRatings[id];
     document.querySelectorAll(`.genre-stars-row[data-genre-id="${id}"] .genre-star`).forEach(s =>
         s.classList.toggle('lit', parseInt(s.dataset.star) <= v));
+
+    // Sincronizar árbol debug si está activo
+    if (modoDebug) actualizarEstrellaDebugGenero(id, v);
 
     renderMisGeneros();
 }
@@ -736,7 +750,11 @@ function limpiarBusqueda() {
 // PANEL DETALLE LIBRO
 // ══════════════════════════════════════════════════════════
 function abrirPanelLibro(libro) {
-    const panelContenedor = document.querySelector('.left-panel');
+    // En modo debug el panel de detalle se ancla sobre el debug-panel;
+    // en modo normal, sobre el left-panel habitual
+    const panelContenedor = modoDebug
+        ? document.getElementById('debug-panel')
+        : document.querySelector('.left-panel');
     if (!panelContenedor) return;
     const panelAnterior = panelContenedor.querySelector('.book-detail-panel');
     if (panelAnterior) panelAnterior.remove();
