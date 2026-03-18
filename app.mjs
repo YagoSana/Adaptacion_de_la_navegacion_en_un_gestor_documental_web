@@ -92,9 +92,11 @@ async function calcular() {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                peso_libro:      3,
-                peso_referencia: 3,
-                user_ratings:    ratingsParaEnviar   // ← nuevo
+                peso_libro:          3,
+                peso_referencia:     3,
+                user_ratings:        ratingsParaEnviar,
+                user_genre_ratings:  misGenreRatings,
+                debug_mode:          modoDebug
             })
         });
 

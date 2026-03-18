@@ -130,12 +130,8 @@ function mkNodoDebug(nodo, depth) {
     // Guardamos average_rating para poder recuperarlo al actualizar pesos
     if (esHoja(nodo)) wrapper._avgRating = nodo.average_rating || 0;
 
-    // Hijos: carpetas por PageRank, hojas por average_rating
-    const hijos      = [...(nodo.hijos || [])].sort((a, b) =>
-        esHoja(a) && esHoja(b)
-            ? (b.average_rating || 0) - (a.average_rating || 0)
-            : (b.valor || 0) - (a.valor || 0)
-    );
+    // Hijos: todos ordenados por PageRank (que ya refleja las valoraciones del usuario)
+    const hijos      = [...(nodo.hijos || [])].sort((a, b) => (b.valor || 0) - (a.valor || 0));
     const tieneHijos = hijos.length > 0;
 
     const row = document.createElement('div');
@@ -144,25 +140,22 @@ function mkNodoDebug(nodo, depth) {
 
     const icon = tieneHijos ? (depth === 0 ? '📚' : '📂') : '📖';
 
-    // Peso efectivo (valoración personal o average_rating)
+    // En debug, el peso solo se muestra si el propio usuario ha valorado algo
+    // (no usamos average_rating del dataset para no contaminar la visualización del PageRank)
     const { misRatings, misGenreRatings, pesoEfectivo, tieneValoracionPropia } = _callbacks;
-    const pm       = pesoEfectivo(nodo);
     const esPropio = tieneValoracionPropia(nodo);
-    const pesoHtml = pm
-        ? `<span class="node-peso${esPropio ? ' peso-propio' : ''}">★ (${pm.toFixed(2)})</span>`
+    const pm       = esPropio ? pesoEfectivo(nodo) : 0;
+    const pesoHtml = (esPropio && pm)
+        ? `<span class="node-peso peso-propio">★ (${pm.toFixed(2)})</span>`
         : '';
 
-    const prTag  = `<span class="dbg-pr" title="PageRank">${nodo.valor?.toExponential(3) ?? '—'}</span>`;
-    const avgTag = esHoja(nodo) && nodo.average_rating != null
-        ? `<span class="dbg-avg">⭐${Number(nodo.average_rating).toFixed(2)}</span>`
-        : '';
+    const prTag = `<span class="dbg-pr" title="PageRank">${nodo.valor?.toExponential(3) ?? '—'}</span>`;
 
     row.innerHTML = `
         <span class="arrow">▶</span>
         <span class="node-icon">${icon}</span>
         <span class="node-label">${escHtml(nodo.nombre)}</span>
         ${pesoHtml}
-        ${avgTag}
         ${prTag}`;
 
     wrapper.appendChild(row);

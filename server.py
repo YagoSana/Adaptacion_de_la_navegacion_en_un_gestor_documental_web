@@ -76,22 +76,25 @@ def iniciar_servidor():
             try:
                 partes = peticion.split('\r\n\r\n', 1)
                 if len(partes) > 1:
-                    body_data    = json.loads(partes[1])
-                    p_libro      = body_data.get('peso_libro', 3.0)
-                    p_ref        = body_data.get('peso_referencia', 3.0)
-                    # Valoraciones personales del usuario { book_id: 1-5 }
-                    user_ratings = body_data.get('user_ratings', {})
+                    body_data          = json.loads(partes[1])
+                    p_libro            = body_data.get('peso_libro', 3.0)
+                    p_ref              = body_data.get('peso_referencia', 3.0)
+                    user_ratings       = body_data.get('user_ratings', {})
+                    user_genre_ratings = body_data.get('user_genre_ratings', {})
+                    debug_mode         = body_data.get('debug_mode', False)
                 else:
                     p_libro, p_ref = 3.0, 3.0
                     user_ratings   = {}
 
                 print(f"Calculando PageRank (peso_libro={p_libro}, peso_ref={p_ref}, "
-                      f"libros valorados por usuario={len(user_ratings)})...")
+                      f"libros valorados={len(user_ratings)}, géneros valorados={len(user_genre_ratings)}, debug_mode={debug_mode})...")
 
                 valores = logica.version_personalizacion_likes(
                     G, ratings_data, referencias,
                     p_libro, p_ref,
-                    user_ratings=user_ratings
+                    user_ratings=user_ratings,
+                    user_genre_ratings=user_genre_ratings,
+                    debug_mode=debug_mode
                 )
 
                 nodos_data = [
