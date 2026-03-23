@@ -1,0 +1,13 @@
+Notas de cambios:
+	Poner titulos para valoraciones y pagerank en debug
+	Poner los numeros de pagerank mas grandes
+	Botón quitar todas las valoraciones
+	
+Notas para memoria:
+	NO son sprints, si no iteraciones
+	Adaptación de la plantilla
+	Dessarrollar prototipado evolutivo
+	
+Listas de ejemplos específicos para modo debug y normal (desde 0, con valoraciones, sin valoraciones [a géneros tambien])
+
+El objetivo no es tanto la app web si no probar la factabilidad del algoritmo pagerank, su viabilidad y capacidad en datasets grandes.
