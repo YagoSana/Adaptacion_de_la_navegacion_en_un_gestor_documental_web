@@ -775,6 +775,7 @@ function abrirPanelLibro(libro) {
     const isbn        = libro.isbn || 'N/A';
 
     // Mapeo de id a titulos
+    let contadorSimilaresNoEncontrados = 0;
     let htmlSimilares = '';
     if (libro.tiene_similar && libro.similar_books?.length) {
         const nombresSimilares = libro.similar_books.map(idSimilar => {
@@ -783,7 +784,10 @@ function abrirPanelLibro(libro) {
             if (libroEncontrado) {
                 return libroEncontrado.nombre || libroEncontrado.title;
             }
-            else return null;
+            else {
+                contadorSimilaresNoEncontrados++;
+                return null;
+            }
         }).filter(nombre => nombre !== null);
 
         // Aplicamos escHtml a cada nombre individualmente y unimos con salto de línea
@@ -794,6 +798,7 @@ function abrirPanelLibro(libro) {
                 <p>
                 ${nombresSimilares.map(nombre => escHtml(nombre)).join('<br>')}
                 </p>
+                <p> Libros similares no disponibles en el dataset simplificado: ${contadorSimilaresNoEncontrados} </p>
             </div>`;
         }
     }
