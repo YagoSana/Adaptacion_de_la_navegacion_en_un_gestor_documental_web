@@ -791,7 +791,7 @@ function abrirPanelLibro(libro) {
         }).filter(nombre => nombre !== null);
 
         // Aplicamos escHtml a cada nombre individualmente y unimos con salto de línea
-        if (nombresSimilares.length > 0) {
+        if (nombresSimilares.length > 0 || contadorSimilaresNoEncontrados > 0) {
         htmlSimilares = `
             <div class="info-similares"">
                 <strong>Libros similares recomendados:</strong><br>

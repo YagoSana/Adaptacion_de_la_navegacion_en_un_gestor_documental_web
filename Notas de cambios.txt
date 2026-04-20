@@ -1,8 +1,8 @@
 Notas de cambios:
-	Poner titulos para valoraciones y pagerank en debug
 	Botón quitar todas las valoraciones
 	
 	
-Listas de ejemplos específicos para modo debug y normal (desde 0, con valoraciones, sin valoraciones [a géneros tambien])
+Listas de ejemplos específicos:
+	Defending jacob tiene 0 similares con nombre y 18 similares "limpiados"
+	Big Little lies con 5 estrellas no llega a ascender tanto como los libros de su categoría porque tendrá peores referencias.
 
-El objetivo no es tanto la app web si no probar la factabilidad del algoritmo pagerank, su viabilidad y capacidad en datasets grandes.
