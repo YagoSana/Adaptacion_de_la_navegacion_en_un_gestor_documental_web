@@ -10,6 +10,9 @@ let similarMap      = {};
 let misRatings      = {};  // { book_id: 1-5 }
 let misGenreRatings = {};  // { nodeId: 1-5 }
 let modoDebug       = false;
+let mostrarPR       = false;
+let sinPrior        = false;  // true = desactivar corrección bayesiana
+let parentMap       = {};  // { childId: parentId } construido tras cada calcular()
 
 try { misRatings = JSON.parse(localStorage.getItem('bookrank_ratings') || '{}'); } catch (e) {}
 try { misGenreRatings = JSON.parse(localStorage.getItem('bookrank_genre_ratings') || '{}'); } catch (e) {}
@@ -21,7 +24,8 @@ const SEARCH_LIMIT = 50;
 // INIT
 // ══════════════════════════════════════════════════════════
 document.addEventListener('DOMContentLoaded', () => {
-    document.getElementById('btn-calc').addEventListener('click', calcular);
+    document.getElementById('btn-calc').addEventListener('click', () => calcular(false));
+    document.getElementById('btn-baseline').addEventListener('click', () => calcular(true));
 
     document.querySelectorAll('.tab-btn').forEach(btn => {
         btn.addEventListener('click', () => switchTab(btn.dataset.tab, btn));
@@ -32,7 +36,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById('search-clear').addEventListener('click', limpiarBusqueda);
     document.getElementById('btn-debug').addEventListener('click', toggleDebug);
+    document.getElementById('btn-ver-pr').addEventListener('click', toggleVerPR);
+    document.getElementById('btn-sin-prior').addEventListener('click', toggleSinPrior);
 });
+
+function toggleVerPR() {
+    mostrarPR = !mostrarPR;
+    const btn = document.getElementById('btn-ver-pr');
+    btn.classList.toggle('active', mostrarPR);
+    btn.textContent = mostrarPR ? '🧮 PageRank ON' : '🧮 Ver PageRank';
+    if (datosGlobales?.arbol) renderArbol(datosGlobales.arbol);
+}
+
+function toggleSinPrior() {
+    sinPrior = !sinPrior;
+    const btn = document.getElementById('btn-sin-prior');
+    btn.classList.toggle('active', sinPrior);
+    btn.textContent = sinPrior ? '📉 Sin prior ON' : '📉 Sin prior';
+}
 
 // ══════════════════════════════════════════════════════════
 // MODO DEBUG
@@ -74,12 +95,12 @@ function switchTab(id, btn) {
 // ══════════════════════════════════════════════════════════
 // CALCULAR — envía también las valoraciones del usuario
 // ══════════════════════════════════════════════════════════
-async function calcular() {
+async function calcular(baseline = false) {
     const btn     = document.getElementById('btn-calc');
     const overlay = document.getElementById('overlay');
 
     btn.disabled    = true;
-    btn.textContent = 'Calculando…';
+    btn.textContent = baseline ? 'Cargando baseline…' : 'Calculando…';
     overlay.classList.add('show');
 
     try {
@@ -96,12 +117,17 @@ async function calcular() {
                 peso_referencia:     3,
                 user_ratings:        ratingsParaEnviar,
                 user_genre_ratings:  misGenreRatings,
-                debug_mode:          modoDebug
+                debug_mode:          modoDebug,
+                baseline:            baseline,
+                aplicar_prior:       !sinPrior
             })
         });
 
         datosGlobales = await res.json();
         if (datosGlobales.similar_map) similarMap = datosGlobales.similar_map;
+
+        parentMap = {};
+        buildParentMap(datosGlobales.arbol);
 
         todasHojasFlat = [];
         recogerHojas(datosGlobales.arbol, todasHojasFlat, []);
@@ -135,30 +161,45 @@ function buildNombreMap(nodo, acc = {}) {
     return acc;
 }
 
+function buildParentMap(nodo, parent = null) {
+    if (parent && nodo.id) parentMap[nodo.id] = parent.id;
+    (nodo.hijos || []).forEach(h => buildParentMap(h, nodo));
+}
+
+// Rating efectivo de un libro:
+//   1) valoración propia del usuario (misRatings)
+//   2) score efectivo del servidor (bayesiano con prior, raw sin prior)
+//   3) average_rating del dataset como fallback
+function ratingEfectivoLibro(hoja) {
+    const myR = misRatings[hoja.id];
+    if (myR > 0) return myR;
+    if (typeof hoja.score_efectivo === 'number') return hoja.score_efectivo;
+    return hoja.average_rating || 0;
+}
+
 // ── Peso efectivo de un nodo ──────────────────────────────
-// Para hojas: mi valoración si existe, si no average_rating del dataset.
-// Para nodos intermedios: media de pesos efectivos de todas sus hojas.
+// Cada nodo es independiente:
+//   - Hoja (libro): mi valoración si existe, si no average_rating.
+//   - Intermedio: mi valoración de categoría si existe, si no la
+//     media de average_rating de sus libros descendientes.
 function pesoEfectivo(nodo) {
-    if (esHoja(nodo)) {
-        const myR = misRatings[nodo.id];
-        return myR > 0 ? myR : (nodo.average_rating || 0);
-    }
+    if (esHoja(nodo)) return ratingEfectivoLibro(nodo);
+
+    const myG = misGenreRatings[nodo.id];
+    if (myG > 0) return myG;
+
     const hojas = [];
     recogerHojas(nodo, hojas, []);
     if (!hojas.length) return 0;
-    const suma = hojas.reduce((acc, h) => {
-        const myR = misRatings[h.id];
-        return acc + (myR > 0 ? myR : (h.average_rating || 0));
-    }, 0);
+    const suma = hojas.reduce((acc, h) => acc + ratingEfectivoLibro(h), 0);
     return suma / hojas.length;
 }
 
-// Devuelve true si el nodo o alguna de sus hojas tiene valoración personal
+// True si el peso mostrado proviene de una valoración propia del usuario
+// sobre este nodo (no cascadea).
 function tieneValoracionPropia(nodo) {
     if (esHoja(nodo)) return (misRatings[nodo.id] || 0) > 0;
-    const hojas = [];
-    recogerHojas(nodo, hojas, []);
-    return hojas.some(h => (misRatings[h.id] || 0) > 0);
+    return (misGenreRatings[nodo.id] || 0) > 0;
 }
 
 function fmtPeso(val, esPropio) {
@@ -322,7 +363,7 @@ function mkCard(libro, rank, showGenre, showMyRating) {
     card.dataset.id = libro.id;
 
     const myR     = misRatings[libro.id] || 0;
-    const pm      = myR > 0 ? myR : (libro.average_rating || 0);
+    const pm      = ratingEfectivoLibro(libro);
     const esPropio = myR > 0;
     const genHtml = showGenre ? `<span class="book-genre">${escHtml(pathStr(libro))}</span>` : '';
     const myRatingHtml = (showMyRating && myR > 0)
@@ -359,7 +400,7 @@ function mkCardRec(libro, rank) {
     card.dataset.id = libro.id;
 
     const myR    = misRatings[libro.id] || 0;
-    const pm     = myR > 0 ? myR : (libro.average_rating || 0);
+    const pm     = ratingEfectivoLibro(libro);
     const esPropio = myR > 0;
 
     card.innerHTML = `
@@ -400,6 +441,8 @@ function rateBook(id, stars) {
 
     // Actualizar el peso mostrado en el nodo hoja del árbol
     actualizarPesoNodoArbol(id);
+    // Refrescar la media de los nodos intermedios que contienen este libro
+    actualizarPesosAncestros(id);
 
     // Mostrar/ocultar botón ✕ en el árbol
     actualizarBtnQuitarArbol(id, v);
@@ -426,6 +469,11 @@ function rateGenre(id, stars) {
     if (modoDebug) actualizarEstrellaDebugGenero(id, v);
 
     renderMisGeneros();
+
+    // Actualizar quirúrgicamente solo este nodo y sus ancestros — sin re-renderizar
+    // el árbol completo, así se preserva el estado expandido/colapsado.
+    actualizarPesoCategoria(id);
+    actualizarPesosAncestros(id);
 }
 
 // Actualiza el texto de peso del nodo hoja en el árbol cuando se valora un libro
@@ -434,8 +482,8 @@ function actualizarPesoNodoArbol(bookId) {
     if (!wrapper) return;
     const hoja = todasHojasFlat.find(h => h.id === bookId);
     if (!hoja) return;
-    const myR = misRatings[bookId] || 0;
-    const pm  = myR > 0 ? myR : (hoja.average_rating || 0);
+    const pm  = ratingEfectivoLibro(hoja);
+    const esPropio = (misRatings[bookId] || 0) > 0;
     const row = wrapper.querySelector('.node-row');
     if (!row) return;
     let pesoEl = row.querySelector('.node-peso');
@@ -443,8 +491,58 @@ function actualizarPesoNodoArbol(bookId) {
         pesoEl = document.createElement('span');
         row.appendChild(pesoEl);
     }
-    pesoEl.className = `node-peso${myR > 0 ? ' peso-propio' : ''}`;
+    pesoEl.className = `node-peso${esPropio ? ' peso-propio' : ''}`;
     pesoEl.textContent = pm ? `★ (${pm.toFixed(2)})` : '';
+}
+
+// Busca un nodo por id dentro del árbol JSON cargado
+function findNodeInTree(nodo, targetId) {
+    if (!nodo) return null;
+    if (nodo.id === targetId) return nodo;
+    for (const child of (nodo.hijos || [])) {
+        const found = findNodeInTree(child, targetId);
+        if (found) return found;
+    }
+    return null;
+}
+
+// Actualiza in-place el peso mostrado para un nodo de categoría (intermedio)
+// sin re-renderizar el árbol — preserva el estado expandido/colapsado.
+function actualizarPesoCategoria(categoryId) {
+    const wrapper = document.querySelector(`#tree-container [data-id="${categoryId}"]`);
+    if (!wrapper) return;
+    const row = wrapper.querySelector('.node-row');
+    if (!row) return;
+    const nodo = findNodeInTree(datosGlobales?.arbol, categoryId);
+    if (!nodo) return;
+
+    const pm = pesoEfectivo(nodo);
+    const esPropio = tieneValoracionPropia(nodo);
+
+    let pesoEl = row.querySelector('.node-peso');
+    if (pm) {
+        if (!pesoEl) {
+            pesoEl = document.createElement('span');
+            const label = row.querySelector('.node-label');
+            if (label && label.nextSibling) row.insertBefore(pesoEl, label.nextSibling);
+            else row.appendChild(pesoEl);
+        }
+        pesoEl.className = `node-peso${esPropio ? ' peso-propio' : ''}`;
+        pesoEl.textContent = `★ (${pm.toFixed(2)})`;
+    } else if (pesoEl) {
+        pesoEl.remove();
+    }
+}
+
+// Recorre el árbol hacia arriba y actualiza los pesos de todos los ancestros.
+// Necesario cuando cambia una hoja o categoría: la media de los intermedios
+// que dependen de hojas también puede haber cambiado.
+function actualizarPesosAncestros(nodeId) {
+    let current = parentMap[nodeId];
+    while (current) {
+        actualizarPesoCategoria(current);
+        current = parentMap[current];
+    }
 }
 
 // Muestra u oculta el botón ✕ junto al libro en el árbol
@@ -533,11 +631,16 @@ function mkNodo(nodo, depth) {
     const pm   = pesoEfectivo(nodo);
     const esPropio = tieneValoracionPropia(nodo);
 
+    const prHtml = (mostrarPR && typeof nodo.valor === 'number')
+        ? `<span class="node-pr">PR (${nodo.valor.toFixed(6)})</span>`
+        : '';
+
     row.innerHTML = `
         <span class="arrow">▶</span>
         <span class="node-icon">${icon}</span>
         <span class="node-label">${escHtml(nodo.nombre)}</span>
-        ${pm ? `<span class="node-peso${esPropio ? ' peso-propio' : ''}">★ (${pm.toFixed(2)})</span>` : ''}`;
+        ${pm ? `<span class="node-peso${esPropio ? ' peso-propio' : ''}">★ (${pm.toFixed(2)})</span>` : ''}
+        ${prHtml}`;
 
     wrapper.appendChild(row);
 

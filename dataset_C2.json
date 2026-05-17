@@ -1,0 +1,80 @@
+[
+  {
+    "book_id": "C2_CRI_1",
+    "title": "Crime sin votos #1",
+    "genero": "Detective crime",
+    "average_rating": "0",
+    "ratings_count": "0",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_C2A", "role": "" }],
+    "descripcion": "Caso C2 — Sin votos ni rating: prueba de robustez.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "C2_CRI_2",
+    "title": "Crime sin votos #2",
+    "genero": "Detective crime",
+    "average_rating": "0",
+    "ratings_count": "0",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_C2B", "role": "" }],
+    "descripcion": "Caso C2 — Sin votos ni rating.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "C2_SUS_1",
+    "title": "Suspense sin votos #1",
+    "genero": "Love-inspired suspense",
+    "average_rating": "0",
+    "ratings_count": "0",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_C2C", "role": "" }],
+    "descripcion": "Caso C2 — Sin votos ni rating.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "C2_SUS_2",
+    "title": "Suspense sin votos #2",
+    "genero": "Love-inspired suspense",
+    "average_rating": "0",
+    "ratings_count": "0",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_C2D", "role": "" }],
+    "descripcion": "Caso C2 — Sin votos ni rating.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "C2_THR_1",
+    "title": "Thriller sin votos #1",
+    "genero": "Spy thriller",
+    "average_rating": "0",
+    "ratings_count": "0",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_C2E", "role": "" }],
+    "descripcion": "Caso C2 — Sin votos ni rating.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "C2_THR_2",
+    "title": "Thriller sin votos #2",
+    "genero": "Spy thriller",
+    "average_rating": "0",
+    "ratings_count": "0",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_C2F", "role": "" }],
+    "descripcion": "Caso C2 — Sin votos ni rating.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  }
+]

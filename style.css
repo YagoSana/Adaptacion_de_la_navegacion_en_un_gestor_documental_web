@@ -565,6 +565,18 @@ header h1 span {
     margin-left: 2px;
 }
 
+.node-pr {
+    font-size: 0.68rem;
+    color: #2a6f9c;
+    font-weight: 600;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-left: 6px;
+    background: #e6f0f7;
+    padding: 1px 6px;
+    border-radius: 6px;
+}
+
 .node-children {
     display: none;
     padding-left: 18px;

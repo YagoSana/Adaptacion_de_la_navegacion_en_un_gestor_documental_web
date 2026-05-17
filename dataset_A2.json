@@ -1,0 +1,62 @@
+[
+  {
+    "book_id": "8435445",
+    "title": "Scorpia Rising",
+    "genero": "Spy thriller",
+    "average_rating": "4.29",
+    "ratings_count": "23978",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_A", "role": "" }],
+    "descripcion": "Caso A2 — Libro popular y muy bien valorado (datos reales).",
+    "publisher": "",
+    "num_pages": "",
+    "publication_year": ""
+  },
+  {
+    "book_id": "3281277",
+    "title": "A Most Wanted Man",
+    "genero": "Spy thriller",
+    "average_rating": "3.48",
+    "ratings_count": "6931",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_B", "role": "" }],
+    "descripcion": "Caso A2 — Libro popular pero peor valorado (datos reales).",
+    "publisher": "",
+    "num_pages": "",
+    "publication_year": ""
+  },
+  {
+    "book_id": "16444910",
+    "title": "The Debriefing",
+    "genero": "Spy thriller",
+    "average_rating": "3.71",
+    "ratings_count": "0",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_C", "role": "" }],
+    "descripcion": "Caso A2 — Libro sin valoraciones reales (recién incorporado).",
+    "publisher": "",
+    "num_pages": "",
+    "publication_year": ""
+  },
+  {
+    "book_id": "A2_DEBUT",
+    "title": "Debut Espía (única valoración ★5)",
+    "genero": "Spy thriller",
+    "average_rating": "5.0",
+    "ratings_count": "1",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_D", "role": "" }],
+    "descripcion": "Caso A2 — Libro sintético: un solo voto con ★5. Sin prior bayesiano subiría al puesto #1 (porque average_rating=5 es el máximo). Con prior la corrección lo arrastra hacia la media global porque v=1 es muy poco para confiar en el rating.",
+    "publisher": "",
+    "num_pages": "",
+    "publication_year": ""
+  }
+]

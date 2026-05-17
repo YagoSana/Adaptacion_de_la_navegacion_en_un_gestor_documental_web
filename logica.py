@@ -1,5 +1,47 @@
 import networkx as nx
+from collections import deque
 from lector import leer_entrada, leer_likes
+
+
+def _ancestro_rateado_cercano(G, nodo, user_genre_ratings):
+    """
+    BFS hacia arriba: devuelve la valoración del ancestro más cercano
+    presente en user_genre_ratings (con valor > 0). None si ninguno.
+    """
+    visitados = {nodo}
+    cola = deque([nodo])
+    while cola:
+        actual = cola.popleft()
+        for padre in G.predecessors(actual):
+            if padre in visitados:
+                continue
+            visitados.add(padre)
+            if padre in user_genre_ratings and user_genre_ratings[padre] > 0:
+                return float(user_genre_ratings[padre])
+            cola.append(padre)
+    return None
+
+
+def ratings_efectivos(G, ratings_data, user_ratings, user_genre_ratings=None):
+    """
+    Aplica únicamente user_ratings sobre ratings_data:
+    cada libro mantiene su average_rating salvo que el usuario
+    haya rateado ese libro concreto. user_genre_ratings NO se
+    propaga al R de los libros — su efecto sobre PageRank se
+    aplica directamente al nodo de categoría en personalization.
+    """
+    user_ratings = user_ratings or {}
+    resultado = {}
+    for book_id, d in ratings_data.items():
+        if book_id in user_ratings and user_ratings[book_id] > 0:
+            effective_R = float(user_ratings[book_id])
+        else:
+            effective_R = float(d["average_rating"])
+        resultado[book_id] = {
+            "average_rating": effective_R,
+            "ratings_count":  d["ratings_count"],
+        }
+    return resultado
 
 # ---------------------------------------------------------------------------
 # Promedio ponderado bayesiano
@@ -12,10 +54,15 @@ from lector import leer_entrada, leer_likes
 #   m = umbral mínimo de votos (percentil 50 por defecto)
 # ---------------------------------------------------------------------------
 
-def _bayesian_scores(ratings_data: dict, percentil_m: float = 0.5) -> dict:
+def _bayesian_scores(ratings_data: dict, percentil_m: float = 0.5, aplicar_prior: bool = True) -> dict:
 
     if not ratings_data:
         return {}
+
+    if not aplicar_prior:
+        # Sin prior: devolver el rating crudo. Demuestra el problema
+        # de no corregir libros con muy pocos votos.
+        return {nodo: float(d["average_rating"]) for nodo, d in ratings_data.items()}
 
     counts  = [d["ratings_count"]  for d in ratings_data.values()]
     ratings = [d["average_rating"] for d in ratings_data.values()]
@@ -30,7 +77,10 @@ def _bayesian_scores(ratings_data: dict, percentil_m: float = 0.5) -> dict:
     for nodo, d in ratings_data.items():
         v = d["ratings_count"]
         R = d["average_rating"]
-        scores[nodo] = (v / (v + m)) * R + (m / (v + m)) * C
+        if v + m == 0:
+            scores[nodo] = C
+        else:
+            scores[nodo] = (v / (v + m)) * R + (m / (v + m)) * C
 
     return scores
 
@@ -46,6 +96,7 @@ def version_personalizacion_likes(
     user_ratings=None,        # { book_id: 1-5 }
     user_genre_ratings=None,  # { node_id: 1-5 } — géneros y subcategorías
     debug_mode=False,
+    aplicar_prior=True,       # False = sin corrección bayesiana (raw average_rating)
 ):
     """
     PageRank personalizado.
@@ -67,10 +118,11 @@ def version_personalizacion_likes(
     if user_genre_ratings is None:
         user_genre_ratings = {}
 
-    # Identificar nodos hoja (libros)
-    niveles    = [G.nodes[n].get('nivel', 0) for n in G.nodes()]
-    max_nivel  = max(niveles) if niveles else 0
-    nodos_hoja = {n for n in G.nodes() if G.nodes[n].get('nivel', 0) == max_nivel}
+    # Identificar nodos hoja (libros): los que no tienen hijos en el grafo.
+    # No usamos nivel porque con árboles de profundidad mixta (p.ej. unas
+    # subcategorías con género intermedio y otras sin él) algunas hojas
+    # quedarían fuera al filtrar por max_nivel.
+    nodos_hoja = {n for n in G.nodes() if G.out_degree(n) == 0}
 
     # Grafo bidireccional con pesos (igual en ambos modos)
     G_completo = nx.DiGraph()
@@ -112,18 +164,12 @@ def version_personalizacion_likes(
             personalization = None
 
     else:
-        # Modo normal: score bayesiano con valoraciones del usuario aplicadas
-        ratings_data_efectivo = {}
-        for book_id, d in ratings_data.items():
-            if book_id in user_ratings and user_ratings[book_id] > 0:
-                ratings_data_efectivo[book_id] = {
-                    "average_rating": float(user_ratings[book_id]),
-                    "ratings_count":  d["ratings_count"],
-                }
-            else:
-                ratings_data_efectivo[book_id] = d
-
-        bayesian = _bayesian_scores(ratings_data_efectivo, percentil_m)
+        # Modo normal: score bayesiano con valoraciones del usuario aplicadas.
+        # Las valoraciones de género/categoría NO modifican el R de los libros;
+        # actúan como un peso extra sobre el propio nodo de categoría en el
+        # vector de personalización. PageRank lo propaga a los descendientes.
+        ratings_data_efectivo = ratings_efectivos(G, ratings_data, user_ratings)
+        bayesian = _bayesian_scores(ratings_data_efectivo, percentil_m, aplicar_prior=aplicar_prior)
 
         personalization = {}
         for nodo in G_completo.nodes():
@@ -132,9 +178,17 @@ def version_personalizacion_likes(
             else:
                 personalization[nodo] = 0.0
 
+        for node_id, estrellas in user_genre_ratings.items():
+            if estrellas > 0 and node_id in personalization:
+                personalization[node_id] += float(estrellas) * peso_libros * 10
+
         total_p = sum(personalization.values())
         if total_p > 0:
             personalization = {k: v / total_p for k, v in personalization.items()}
+        else:
+            # Sin ninguna señal (catálogo sin votos ni valoraciones del usuario):
+            # PageRank con distribución uniforme. Evita ZeroDivisionError.
+            personalization = None
 
     pr = nx.pagerank(G_completo, alpha=alpha, personalization=personalization, weight='weight')
 

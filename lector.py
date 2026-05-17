@@ -51,7 +51,80 @@ NOMBRE_LEGIBLE = {
 MAX_LIBROS_POR_SUBCATEGORIA = 100
 
 
-def leer_entrada(ruta_json):
+def _simplificar_arbol(G):
+    """
+    Poda nodos intermedios sin libros en su subárbol y colapsa
+    la cadena de nodos con un único hijo hasta llegar al primer
+    nodo con bifurcación o libros. Útil para datasets de prueba.
+    """
+    from collections import deque
+
+    niveles   = [G.nodes[n].get('nivel', 0) for n in G.nodes()]
+    max_nivel = max(niveles) if niveles else 0
+    libros    = {n for n in G.nodes() if G.nodes[n].get('nivel', 0) == max_nivel}
+
+    # 1. Marcar nodos con al menos un libro en su subárbol
+    util = set(libros)
+    cambio = True
+    while cambio:
+        cambio = False
+        for n in list(G.nodes()):
+            if n in util:
+                continue
+            if any(s in util for s in G.successors(n)):
+                util.add(n)
+                cambio = True
+
+    # 2. Eliminar nodos no útiles (ramas sin libros)
+    G.remove_nodes_from(set(G.nodes()) - util)
+
+    # 3. Colapsar cadenas de un solo hijo desde la raíz
+    raices = [n for n in G.nodes() if G.in_degree(n) == 0]
+    if not raices:
+        return
+    raiz = raices[0]
+    while True:
+        hijos = list(G.successors(raiz))
+        if len(hijos) != 1:
+            break
+        if hijos[0] in libros:
+            break
+        G.remove_node(raiz)
+        raiz = hijos[0]
+
+    # 4. Colapsar intermedios con un único hijo no-libro:
+    #    si n tiene 1 solo hijo c y c también es intermedio,
+    #    se eliminan c y los nietos pasan a ser hijos directos de n.
+    cambios = True
+    while cambios:
+        cambios = False
+        for n in list(G.nodes()):
+            hijos = list(G.successors(n))
+            if len(hijos) != 1:
+                continue
+            hijo = hijos[0]
+            if hijo in libros:
+                continue  # hijo es un libro, no colapsar
+            for nieto in list(G.successors(hijo)):
+                G.add_edge(n, nieto)
+            G.remove_node(hijo)
+            cambios = True
+            break
+
+    # 5. Recalcular niveles desde la nueva raíz (BFS)
+    G.nodes[raiz]['nivel'] = 0
+    visitados = {raiz}
+    cola = deque([raiz])
+    while cola:
+        n = cola.popleft()
+        for c in G.successors(n):
+            if c not in visitados:
+                visitados.add(c)
+                G.nodes[c]['nivel'] = G.nodes[n]['nivel'] + 1
+                cola.append(c)
+
+
+def leer_entrada(ruta_json, simplificar=False, display_overrides=None):
     """
     Construye el grafo jerárquico desde el dataset JSON.
     Nodos: Fiction > subgrupo > género > libro
@@ -207,6 +280,16 @@ def leer_entrada(ruta_json):
 
     print(f"[lector] Nodos libro en grafo:     {G.number_of_nodes() - len(NODOS_FIJOS) - len(nodos_genero_añadidos)}")
     print(f"[lector] Referencias entre libros: {len(referencias)}")
+
+    if simplificar:
+        _simplificar_arbol(G)
+        print(f"[lector] Árbol simplificado: {G.number_of_nodes()} nodos restantes.")
+
+    if display_overrides:
+        for nid, nombre in display_overrides.items():
+            if nid in G.nodes:
+                G.nodes[nid]['display'] = nombre
+                print(f"[lector] Display override: {nid} -> {nombre}")
 
     return G, referencias
 

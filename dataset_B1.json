@@ -1,0 +1,68 @@
+[
+  {
+    "book_id": "1848444",
+    "title": "A Scandal in Bohemia (Sherlock Holmes)",
+    "genero": "Detective crime",
+    "average_rating": "4.22",
+    "ratings_count": "67230",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C1", "role": "" }],
+    "descripcion": "Caso B1 — Crimen #1: Sherlock Holmes, muy popular y bien valorado.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "16297",
+    "title": "Cards on the Table (Hercule Poirot, #15)",
+    "genero": "Detective crime",
+    "average_rating": "3.90",
+    "ratings_count": "20080",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C2", "role": "" }],
+    "descripcion": "Caso B1 — Crimen #2: Agatha Christie, popular.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "16349",
+    "title": "Hercule Poirot's Christmas (Hercule Poirot, #19)",
+    "genero": "Detective crime",
+    "average_rating": "3.91",
+    "ratings_count": "18405",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C3", "role": "" }],
+    "descripcion": "Caso B1 — Crimen #3: Agatha Christie, popular.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "26236956",
+    "title": "The Obsession",
+    "genero": "Love-inspired suspense",
+    "average_rating": "4.18",
+    "ratings_count": "26929",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_T1", "role": "" }],
+    "descripcion": "Caso B1 — Terror gótico #1: muy popular y bien valorado.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "114184",
+    "title": "Blue Smoke",
+    "genero": "Love-inspired suspense",
+    "average_rating": "3.97",
+    "ratings_count": "24621",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_T2", "role": "" }],
+    "descripcion": "Caso B1 — Terror gótico #2: popular.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "76179",
+    "title": "Envy",
+    "genero": "Love-inspired suspense",
+    "average_rating": "4.15",
+    "ratings_count": "11716",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_T3", "role": "" }],
+    "descripcion": "Caso B1 — Terror gótico #3: bien valorado.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  }
+]

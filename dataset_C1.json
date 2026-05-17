@@ -1,0 +1,68 @@
+[
+  {
+    "book_id": "1848444",
+    "title": "A Scandal in Bohemia (Sherlock Holmes)",
+    "genero": "Detective crime",
+    "average_rating": "4.22",
+    "ratings_count": "67230",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C1A", "role": "" }],
+    "descripcion": "Caso C1 — Crime (categoría fuerte): libro insignia, muy popular y bien valorado.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "69629",
+    "title": "The Judas Goat (Spenser, #5)",
+    "genero": "Detective crime",
+    "average_rating": "4.04",
+    "ratings_count": "5678",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C1B", "role": "" }],
+    "descripcion": "Caso C1 — Crime: sólido, consistente con el nivel de la categoría.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "690146",
+    "title": "The Adventure of the Christmas Pudding",
+    "genero": "Detective crime",
+    "average_rating": "3.72",
+    "ratings_count": "6173",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C1C", "role": "" }],
+    "descripcion": "Caso C1 — Crime: el más flojo del grupo (3.72) — su bayesiano está por debajo de los duds de Suspense, pero sube en PR por la buena vecindad.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "26236956",
+    "title": "The Obsession",
+    "genero": "Love-inspired suspense",
+    "average_rating": "4.18",
+    "ratings_count": "26929",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C1D", "role": "" }],
+    "descripcion": "Caso C1 — Suspense (categoría débil): la ESTRELLA aislada del grupo.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "13331181",
+    "title": "Shadow Woman",
+    "genero": "Love-inspired suspense",
+    "average_rating": "3.69",
+    "ratings_count": "5249",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C1E", "role": "" }],
+    "descripcion": "Caso C1 — Suspense: dud claro que arrastra la categoría.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "30350",
+    "title": "French Silk",
+    "genero": "Love-inspired suspense",
+    "average_rating": "3.79",
+    "ratings_count": "6228",
+    "tiene_similar": false, "similar_books": [], "isbn": "",
+    "authors": [{ "author_id": "autor_C1F", "role": "" }],
+    "descripcion": "Caso C1 — Suspense: otro libro flojo de la categoría.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  }
+]

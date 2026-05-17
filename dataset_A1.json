@@ -1,0 +1,47 @@
+[
+  {
+    "book_id": "8435445",
+    "title": "Scorpia Rising",
+    "genero": "Spy thriller",
+    "average_rating": "4.29",
+    "ratings_count": "23978",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_A", "role": "" }],
+    "descripcion": "Caso de prueba A1 — Libro A: popular y muy bien valorado (datos reales del dataset).",
+    "publisher": "",
+    "num_pages": "",
+    "publication_year": ""
+  },
+  {
+    "book_id": "3281277",
+    "title": "A Most Wanted Man",
+    "genero": "Spy thriller",
+    "average_rating": "3.48",
+    "ratings_count": "6931",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_B", "role": "" }],
+    "descripcion": "Caso de prueba A1 — Libro B: popular pero peor valorado (datos reales del dataset).",
+    "publisher": "",
+    "num_pages": "",
+    "publication_year": ""
+  },
+  {
+    "book_id": "16444910",
+    "title": "The Debriefing",
+    "genero": "Spy thriller",
+    "average_rating": "3.71",
+    "ratings_count": "0",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_C", "role": "" }],
+    "descripcion": "Caso de prueba A1 — Libro C: sin valoraciones reales (recién incorporado).",
+    "publisher": "",
+    "num_pages": "",
+    "publication_year": ""
+  }
+]
