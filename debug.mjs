@@ -1,22 +1,22 @@
-// ══════════════════════════════════════════════════════════
-// MODO DEBUG — Árbol con PageRank visible e interacción completa
+// ==========================================================
+// MODO DEBUG - Árbol con PageRank visible e interacción completa
 //
 // Muestra un árbol independiente donde:
-//   · Cada nodo expone su valor de PageRank en notación científica
-//   · Las hojas muestran además su average_rating del dataset
-//   · Por subcategoría se limita a los 10 libros con mayor average_rating
-//   · Se pueden valorar libros y géneros igual que en el árbol normal
-//   · Se puede abrir el panel de detalle de cada libro
-// ══════════════════════════════════════════════════════════
+//   - Cada nodo expone su valor de PageRank en notación científica
+//   - Las hojas muestran además su average_rating del dataset
+//   - Por subcategoría se limita a los 10 libros con mayor average_rating
+//   - Se pueden valorar libros y géneros igual que en el árbol normal
+//   - Se puede abrir el panel de detalle de cada libro
+// ==========================================================
 
 import { esHoja, escHtml, pathStr } from './utils.mjs';
 
 const MAX_POR_SUBCAT = 10;
 
-// ── Referencia a callbacks inyectados desde app.mjs ──────
+// Referencia a callbacks inyectados desde app.mjs 
 let _callbacks = null;
 
-// ── Clona el árbol recortando hojas por average_rating ────
+// Clona el árbol recortando hojas por average_rating
 function clonarConLimite(nodo) {
     if (esHoja(nodo)) return { ...nodo };
 
@@ -44,9 +44,8 @@ function clonarConLimite(nodo) {
     return { ...nodo, hijos: [...subCarpetasLimitadas, ...hojasLimitadas] };
 }
 
-// ── Punto de entrada: renderiza el árbol debug en su contenedor ──
-// callbacks = { misRatings, misGenreRatings, pesoEfectivo, tieneValoracionPropia,
-//               rateBook, rateGenre, abrirPanelLibro }
+// Punto de entrada: renderiza el árbol debug en su contenedor
+// callbacks = { misRatings, misGenreRatings, pesoEfectivo, tieneValoracionPropia, rateBook, rateGenre, abrirPanelLibro }
 export function renderArbolDebug(arbol, callbacks) {
     _callbacks = callbacks;
     const container = document.getElementById('debug-tree-container');
@@ -58,7 +57,7 @@ export function renderArbolDebug(arbol, callbacks) {
     if (firstRow) firstRow.click();
 }
 
-// ── Actualiza estrellas de un libro en el árbol debug ────
+// Actualiza estrellas de un libro en el árbol debug
 export function actualizarEstrellaDebugLibro(bookId, valor) {
     const container = document.getElementById('debug-tree-container');
     if (!container) return;
@@ -74,7 +73,7 @@ export function actualizarEstrellaDebugLibro(bookId, valor) {
     _actualizarBtnQuitarDebug(container, bookId, valor);
 }
 
-// ── Actualiza estrellas de un género en el árbol debug ───
+// Actualiza estrellas de un género en el árbol debug
 export function actualizarEstrellaDebugGenero(genreId, valor) {
     const container = document.getElementById('debug-tree-container');
     if (!container) return;
@@ -82,7 +81,7 @@ export function actualizarEstrellaDebugGenero(genreId, valor) {
         s.classList.toggle('lit', parseInt(s.dataset.star) <= valor));
 }
 
-// ── Actualiza el badge de peso en la fila de un libro ────
+// Actualiza el badge de peso en la fila de un libro
 function _actualizarPesoFilaDebug(container, bookId) {
     if (!_callbacks) return;
     const wrapper = container.querySelector(`[data-id="${bookId}"]`);
@@ -102,7 +101,7 @@ function _actualizarPesoFilaDebug(container, bookId) {
     pesoEl.textContent = pm ? `★ (${pm.toFixed(2)})` : '';
 }
 
-// ── Muestra/oculta el botón quitar en el árbol debug ─────
+// Muestra/oculta el botón quitar en el árbol debug
 function _actualizarBtnQuitarDebug(container, bookId, rating) {
     const wrapper  = container.querySelector(`[data-id="${bookId}"]`);
     if (!wrapper) return;
@@ -123,7 +122,7 @@ function _actualizarBtnQuitarDebug(container, bookId, rating) {
     }
 }
 
-// ── Construye un nodo del árbol debug ────────────────────
+// Construye un nodo del árbol debug
 function mkNodoDebug(nodo, depth) {
     const wrapper = document.createElement('div');
     wrapper.dataset.id = nodo.id;
@@ -218,7 +217,7 @@ function mkNodoDebug(nodo, depth) {
     return wrapper;
 }
 
-// ── Estrellas de libro (hoja) en debug ───────────────────
+// Estrellas de libro (hoja) en debug
 function mkDebugLeafStars(id) {
     const div = document.createElement('div');
     div.className  = 'dbg-leaf-stars leaf-stars-row';
@@ -235,7 +234,7 @@ function mkDebugLeafStars(id) {
     return div;
 }
 
-// ── Estrellas de género/subgénero en debug ───────────────
+// Estrellas de género/subgénero en debug
 function mkDebugGenreStars(id) {
     const div = document.createElement('div');
     div.className       = 'dbg-genre-stars genre-stars-row';

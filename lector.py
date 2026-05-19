@@ -53,8 +53,7 @@ MAX_LIBROS_POR_SUBCATEGORIA = 100
 
 def _simplificar_arbol(G):
     """
-    Poda nodos intermedios sin libros en su subárbol y colapsa
-    la cadena de nodos con un único hijo hasta llegar al primer
+    Poda nodos intermedios sin libros en su subárbol y colapsa la cadena de nodos con un único hijo hasta llegar al primer
     nodo con bifurcación o libros. Útil para datasets de prueba.
     """
     from collections import deque
@@ -63,7 +62,7 @@ def _simplificar_arbol(G):
     max_nivel = max(niveles) if niveles else 0
     libros    = {n for n in G.nodes() if G.nodes[n].get('nivel', 0) == max_nivel}
 
-    # 1. Marcar nodos con al menos un libro en su subárbol
+    # Marcar nodos con al menos un libro en su subárbol
     util = set(libros)
     cambio = True
     while cambio:
@@ -75,10 +74,10 @@ def _simplificar_arbol(G):
                 util.add(n)
                 cambio = True
 
-    # 2. Eliminar nodos no útiles (ramas sin libros)
+    # Eliminar nodos no útiles (ramas sin libros)
     G.remove_nodes_from(set(G.nodes()) - util)
 
-    # 3. Colapsar cadenas de un solo hijo desde la raíz
+    # Colapsar cadenas de un solo hijo desde la raíz
     raices = [n for n in G.nodes() if G.in_degree(n) == 0]
     if not raices:
         return
@@ -92,9 +91,9 @@ def _simplificar_arbol(G):
         G.remove_node(raiz)
         raiz = hijos[0]
 
-    # 4. Colapsar intermedios con un único hijo no-libro:
-    #    si n tiene 1 solo hijo c y c también es intermedio,
-    #    se eliminan c y los nietos pasan a ser hijos directos de n.
+    # Colapsar intermedios con un único hijo no-libro:
+    #   si n tiene 1 solo hijo c y c también es intermedio,
+    #   se eliminan c y los nietos pasan a ser hijos directos de n.
     cambios = True
     while cambios:
         cambios = False
@@ -111,7 +110,7 @@ def _simplificar_arbol(G):
             cambios = True
             break
 
-    # 5. Recalcular niveles desde la nueva raíz (BFS)
+    # Recalcular niveles desde la nueva raíz (BFS)
     G.nodes[raiz]['nivel'] = 0
     visitados = {raiz}
     cola = deque([raiz])
@@ -128,12 +127,11 @@ def leer_entrada(ruta_json, simplificar=False, display_overrides=None):
     """
     Construye el grafo jerárquico desde el dataset JSON.
     Nodos: Fiction > subgrupo > género > libro
-    Se limita a MAX_LIBROS_POR_SUBCATEGORIA libros por subcategoría,
-    conservando los de mayor ratings_count.
+    Se limita a MAX_LIBROS_POR_SUBCATEGORIA libros por subcategoría, conservando los de mayor ratings_count.
     """
     G = nx.DiGraph()
 
-    # 1. Añadir nodos fijos del árbol
+    # Añadir nodos fijos del árbol
     for nodo, nivel in NODOS_FIJOS.items():
         nombre_display = NOMBRE_LEGIBLE.get(nodo, nodo)
         G.add_node(nodo, nivel=nivel, display=nombre_display)
@@ -145,11 +143,11 @@ def leer_entrada(ruta_json, simplificar=False, display_overrides=None):
     G.add_edge("Mystery&Crime fiction", "Mystery&Crime fiction/Thriller")
     G.add_edge("Mystery&Crime fiction", "Mystery&Crime fiction/Suspense")
 
-    # 2. Leer el dataset
+    # Leer el dataset
     with open(ruta_json, 'r', encoding='utf-8') as f:
         libros = json.load(f)
 
-    # Deduplicación paso A: por book_id
+    # Deduplicación por book_id
     por_id = {}
     for libro in libros:
         bid = libro.get("book_id")
@@ -159,7 +157,7 @@ def leer_entrada(ruta_json, simplificar=False, display_overrides=None):
         if bid not in por_id or rc_nuevo > int(por_id[bid].get("ratings_count") or 0):
             por_id[bid] = libro
 
-    # Deduplicación paso B: por título normalizado
+    # Deduplicación por título normalizado
     import unicodedata, re
 
     def normalizar_titulo(t):
@@ -226,7 +224,7 @@ def leer_entrada(ruta_json, simplificar=False, display_overrides=None):
     libros_unicos = [l for l in libros_unicos if l.get("book_id") in ids_permitidos]
     print(f"[lector] Total libros tras límite por subcategoría: {len(libros_unicos)}")
 
-    # Índice book_id → libro (incluye redirecciones)
+    # Índice book_id -> libro (incluye redirecciones)
     indice = {l["book_id"]: l for l in libros_unicos}
     for desc, ganador in id_redirigido.items():
         if ganador in indice:
