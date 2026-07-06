@@ -46,7 +46,6 @@ MAPEO_GENEROS = {
 # Mínimo de votos en un shelf para tomarlo en cuenta
 MIN_VOTOS_SHELF = 2
 
-
 def detectar_genero(popular_shelves):
 
     mejor_genero = None

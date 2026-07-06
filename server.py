@@ -65,7 +65,7 @@ def iniciar_servidor():
     server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     server.bind((HOST, PORT))
     server.listen(1)
-    print(f"🚀 Servidor listo en http://{HOST}:{PORT}  (Ctrl+C para parar)")
+    print(f"Servidor listo en http://{HOST}:{PORT}  (Ctrl+C para parar)")
 
     print(f"Cargando dataset {DATASET}...")
     import re
@@ -125,7 +125,7 @@ def iniciar_servidor():
                     aplicar_prior = True
 
                 # Calcular scores efectivos: lo que se usa como R para cada libro
-                # (bayesiano cuando aplicar_prior=True, raw average_rating cuando False).
+                # (bayesiano cuando aplicar_prior=True, raw average_rating cuando False)
                 ratings_eff = logica.ratings_efectivos(G, ratings_data, user_ratings, user_genre_ratings)
                 scores_efectivos = logica._bayesian_scores(ratings_eff, aplicar_prior=aplicar_prior)
 
@@ -136,7 +136,7 @@ def iniciar_servidor():
                     for book_id, score in scores_efectivos.items():
                         if book_id in sort_values:
                             sort_values[book_id] = score
-                    # valores = 0 → la badge "PR" mostrará 0 porque aún no se ha calculado
+                    # valores = 0 -> la badge "PR" mostrará 0 porque aún no se ha calculado
                     valores = {n: 0.0 for n in G.nodes()}
                 else:
                     print(f"Calculando PageRank (peso_libro={p_libro}, peso_ref={p_ref}, "
@@ -192,4 +192,4 @@ if __name__ == "__main__":
     try:
         iniciar_servidor()
     except KeyboardInterrupt:
-        print("\n👋 Servidor detenido por el usuario (Ctrl+C).")
+        print("\n Servidor detenido por el usuario (Ctrl+C).")
