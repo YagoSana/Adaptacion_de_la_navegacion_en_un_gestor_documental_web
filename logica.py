@@ -85,6 +85,25 @@ def _bayesian_scores(ratings_data: dict, percentil_m: float = 0.5, aplicar_prior
     return scores
 
 
+def _score_por_defecto(G, bayesian):
+    """
+    Devuelve, para cada nodo, su score "de partida":
+    - Si es un libro (está en bayesian), su propio score bayesiano.
+    - Si es una categoría, la media de los scores de sus hijos directos
+      (ya calculados, porque recorremos el árbol de abajo hacia arriba).
+    """
+    orden = list(nx.dfs_postorder_nodes(G))  # hijos antes que padres
+    defaults = {}
+    for nodo in orden:
+        if nodo in bayesian:
+            defaults[nodo] = bayesian[nodo]
+        else:
+            hijos = list(G.successors(nodo))
+            valores_hijos = [defaults[h] for h in hijos if h in defaults]
+            defaults[nodo] = sum(valores_hijos) / len(valores_hijos) if valores_hijos else 0.0
+    return defaults
+
+
 def version_personalizacion_likes(
     G,
     ratings_data,
@@ -171,16 +190,15 @@ def version_personalizacion_likes(
         ratings_data_efectivo = ratings_efectivos(G, ratings_data, user_ratings)
         bayesian = _bayesian_scores(ratings_data_efectivo, percentil_m, aplicar_prior=aplicar_prior)
 
+        defaults = _score_por_defecto(G, bayesian)
+
         personalization = {}
         for nodo in G_completo.nodes():
-            if nodo in bayesian:
-                personalization[nodo] = bayesian[nodo] * peso_libros * 10
-            else:
-                personalization[nodo] = 0.0
+            personalization[nodo] = defaults.get(nodo, 0.0) * peso_libros * 10
 
         for node_id, estrellas in user_genre_ratings.items():
             if estrellas > 0 and node_id in personalization:
-                personalization[node_id] += float(estrellas) * peso_libros * 10
+                personalization[node_id] = float(estrellas) * peso_libros * 10
 
         total_p = sum(personalization.values())
         if total_p > 0:

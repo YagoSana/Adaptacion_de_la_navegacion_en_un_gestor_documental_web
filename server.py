@@ -3,7 +3,7 @@ import json
 import lector
 import logica
 
-DATASET = "dataset_C2.json"
+DATASET = "dataset_limpio.json"
 
 # Renombrado de nodos para datasets de prueba (display only, los IDs no cambian)
 DATASET_DISPLAYS = {
