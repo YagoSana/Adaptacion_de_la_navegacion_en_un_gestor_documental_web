@@ -1,0 +1,54 @@
+[
+  {
+    "book_id": "D_EX",
+    "title": "El Explorador",
+    "genero": "Generic thriller",
+    "average_rating": "4.50",
+    "ratings_count": "50000",
+    "tiene_similar": true,
+    "similar_books": ["D_EO"],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_D1", "role": "" }],
+    "descripcion": "Caso C3 - Ancla (categoria Aventura): libro muy popular y bien valorado, con una referencia de similitud hacia 'El Enigma Olvidado'.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "D_RP",
+    "title": "Ruta Perdida",
+    "genero": "Generic thriller",
+    "average_rating": "4.00",
+    "ratings_count": "5000",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_D2", "role": "" }],
+    "descripcion": "Caso C3 - Aventura: libro de relleno de la categoria, sin ninguna referencia de similitud.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "D_EO",
+    "title": "El Enigma Olvidado",
+    "genero": "Generic mystery",
+    "average_rating": "3.50",
+    "ratings_count": "100",
+    "tiene_similar": true,
+    "similar_books": ["D_EX"],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_D3", "role": "" }],
+    "descripcion": "Caso C3 - Misterio Raro: libro obscuro y poco votado, CON referencia de similitud hacia 'El Explorador'. Es el nodo de interes del caso.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  },
+  {
+    "book_id": "D_SN",
+    "title": "Sombra sin Nombre",
+    "genero": "Generic mystery",
+    "average_rating": "3.50",
+    "ratings_count": "100",
+    "tiene_similar": false,
+    "similar_books": [],
+    "isbn": "",
+    "authors": [{ "author_id": "autor_D4", "role": "" }],
+    "descripcion": "Caso C3 - Misterio Raro: libro de CONTROL, con las mismas estadisticas exactas que 'El Enigma Olvidado' (misma nota, mismos votos), pero SIN ninguna referencia de similitud. Sirve para aislar el efecto del arco de referencia.",
+    "publisher": "", "num_pages": "", "publication_year": ""
+  }
+]
