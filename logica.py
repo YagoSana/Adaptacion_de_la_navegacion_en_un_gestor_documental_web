@@ -190,6 +190,11 @@ def version_personalizacion_likes(
 
         defaults = _score_por_defecto(G, bayesian)
 
+        #print defaults para depuración
+        print("\n--- defaults\n")
+        for nodo, valor in defaults.items():
+            print(f"{nodo}: {valor:.8f}")
+
         personalization = {}
         for nodo in G_completo.nodes():
             personalization[nodo] = defaults.get(nodo, 0.0) * peso_libros * 10
@@ -205,6 +210,14 @@ def version_personalizacion_likes(
             # Sin ninguna señal (catálogo sin votos ni valoraciones del usuario):
             # PageRank con distribución uniforme. Evita ZeroDivisionError
             personalization = None
+
+    #imprimir el vector de personalización para depuración
+    print("\n--- personalization\n")
+    if personalization:
+        for nodo, valor in personalization.items():
+            print(f"{nodo}: {valor:.6f}")
+    else:
+        print("Uniforme (None)")
 
     pr = nx.pagerank(G_completo, alpha=alpha, personalization=personalization, weight='weight')
 
